@@ -1,0 +1,21 @@
+{
+  "name": "orin-router-service",
+  "version": "1.0.0",
+  "description": "Orin Router: one OpenAI-compatible API over many providers. Priority routing, failover, keys, logs.",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --import ./test/_hooks.mjs test/*.test.mjs",
+    "test:ts": "tsc --noEmit && node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.2",
+    "typescript": "^5.5.0"
+  }
+}
