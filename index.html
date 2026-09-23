@@ -49,10 +49,29 @@ th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);font-f
     <p class="mut">Add your <b>OpenRouter</b>, <b>Groq</b> and <b>OpenAI-compatible</b> keys. Get <b>one endpoint</b> + <b>one key</b> that fans out across all of them with automatic failover. OpenAI SDKs work unchanged.</p>
     <div class="row"><button class="btn" id="btn-start">Open dashboard</button><a class="mut" href="https://orinai.org">orinai.org</a><a class="mut" href="https://github.com/januththedev/orin-router-service">GitHub</a></div>
   </div>
-  <div class="card" id="connect-card"><h2>Connect</h2>
-    <p class="mut">Paste an <b>Orin session token</b> (from Orin Chat login) or an <b>Orin MCP credential</b> (<code>orin_mcp_…</code>). Stored only in this browser. Your provider keys are encrypted server-side and never shown again.</p>
-    <label>Orin token</label><input id="token" type="password" placeholder="orin session or orin_mcp_…" autocomplete="off" />
-    <div class="row"><button class="btn" id="btn-save">Save &amp; open dashboard</button><button class="btn ghost" id="btn-clear">Forget</button></div>
+  <div class="card" id="connect-card"><h2>Sign in <span class="mut" style="font-weight:400;font-size:13px">same account as Orin Chat</span></h2>
+    <div class="row" style="margin-bottom:8px">
+      <button class="btn ghost small" id="tab-login">Sign in</button>
+      <button class="btn ghost small" id="tab-register">Create account</button>
+      <span class="sp"></span><span class="mut" id="who"></span>
+    </div>
+    <div id="pane-login">
+      <label>Email or phone</label><input id="li-id" placeholder="you@example.com" autocomplete="username" />
+      <label>Password</label><input id="li-pw" type="password" autocomplete="current-password" />
+      <div class="row"><button class="btn" id="btn-login">Sign in</button><span class="mut" id="li-msg"></span></div>
+    </div>
+    <div id="pane-register" class="hidden">
+      <label>Name</label><input id="rg-name" placeholder="Your name" autocomplete="name" />
+      <label>Email</label><input id="rg-email" placeholder="you@example.com" autocomplete="email" />
+      <label>Phone</label><input id="rg-phone" placeholder="+9477…" autocomplete="tel" />
+      <label>Password</label><input id="rg-pw" type="password" autocomplete="new-password" />
+      <label>Confirm password</label><input id="rg-pw2" type="password" autocomplete="new-password" />
+      <div class="row"><button class="btn" id="btn-register">Create account</button><span class="mut" id="rg-msg"></span></div>
+    </div>
+    <details style="margin-top:10px"><summary class="mut">Advanced: use a token instead</summary>
+      <label>Orin session or MCP credential</label><input id="token" type="password" placeholder="orin session or orin_mcp_…" autocomplete="off" />
+      <div class="row"><button class="btn ghost small" id="btn-save">Save token</button><button class="btn ghost small" id="btn-clear">Forget</button></div>
+    </details>
   </div>
   <div class="grid">
     <div class="card"><h2>1 · Add APIs</h2><p class="mut">Paste keys from any provider. List the models each one serves — or leave blank for “any model”.</p></div>
@@ -103,10 +122,41 @@ const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<
 const show = (id) => { for (const v of ['view-home', 'view-dash']) $(v).classList.add('hidden'); $(id).classList.remove('hidden'); };
 
 $('btn-start').onclick = () => { $('connect-card').scrollIntoView({ behavior: 'smooth' }); };
-$('btn-save').onclick = () => { localStorage.setItem('orin_token', $('token').value.trim()); openDash(); };
-$('btn-clear').onclick = () => { localStorage.removeItem('orin_token'); $('token').value = ''; };
-$('btn-back').onclick = () => show('view-home');
-$('btn-forget').onclick = () => { localStorage.removeItem('orin_token'); show('view-home'); };
+const CORE = 'https://orinai.org';
+async function coreLogin(action, body) {
+  const r = await fetch(CORE + '/api/auth/password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, ...body }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || 'sign-in failed');
+  localStorage.setItem('orin_token', j.sessionToken);
+  localStorage.setItem('orin_user', JSON.stringify(j.user || {}));
+  paintWho();
+  return j.user;
+}
+function signedInUser() { try { return JSON.parse(localStorage.getItem('orin_user') || 'null'); } catch { return null; } }
+function signOut() { localStorage.removeItem('orin_token'); localStorage.removeItem('orin_user'); paintWho(); }
+function paintWho() { const u = signedInUser(); const el = $('who'); if (el) el.textContent = u ? `signed in as ${u.email || u.name || 'you'}` : ''; }
+$('tab-login').onclick = () => { $('pane-login').classList.remove('hidden'); $('pane-register').classList.add('hidden'); };
+$('tab-register').onclick = () => { $('pane-register').classList.remove('hidden'); $('pane-login').classList.add('hidden'); };
+$('btn-login').onclick = async () => {
+  try {
+    $('li-msg').textContent = 'signing in…';
+    await coreLogin('login', { identifier: $('li-id').value.trim(), password: $('li-pw').value });
+    $('li-msg').textContent = ''; $('li-pw').value = '';
+    openDash();
+  } catch (e) { $('li-msg').textContent = e.message; }
+};
+$('btn-register').onclick = async () => {
+  try {
+    $('rg-msg').textContent = 'creating…';
+    await coreLogin('register', { name: $('rg-name').value.trim(), email: $('rg-email').value.trim(), phone: $('rg-phone').value.trim(), password: $('rg-pw').value, confirmPassword: $('rg-pw2').value });
+    $('rg-msg').textContent = ''; $('rg-pw').value = ''; $('rg-pw2').value = '';
+    openDash();
+  } catch (e) { $('rg-msg').textContent = e.message; }
+};
+$('btn-save').onclick = () => { localStorage.setItem('orin_token', $('token').value.trim()); localStorage.removeItem('orin_user'); paintWho(); openDash(); };
+$('btn-clear').onclick = () => { signOut(); $('token').value = ''; };
+$('btn-forget').onclick = () => { signOut(); show('view-home'); };
+paintWho();
 $('p-type').onchange = () => $('p-url-wrap').classList.toggle('hidden', $('p-type').value !== 'custom');
 
 $('btn-mint').onclick = async () => {
