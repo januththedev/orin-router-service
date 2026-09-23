@@ -4,5 +4,8 @@
     "api/v1/chat/completions.ts": { "maxDuration": 120 },
     "api/v1/models.ts": { "maxDuration": 10 },
     "api/*.ts": { "maxDuration": 60 }
-  }
+  },
+  "rewrites": [
+    { "source": "/docs/:slug", "destination": "/docs/:slug.html" }
+  ]
 }

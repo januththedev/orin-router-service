@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Orin Router API Reference — Models &amp; Chat Completions</title>
+<meta name="description" content="Orin Router API reference: GET /v1/models and POST /v1/chat/completions with streaming, errors and rate limits. OpenAI-compatible." />
+<link rel="canonical" href="https://router.orinai.org/docs/api" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://router.orinai.org/docs/api" />
+<meta property="og:title" content="Orin Router API Reference" />
+<meta property="og:description" content="OpenAI-compatible endpoints: models, chat completions, streaming, errors." />
+<meta property="og:image" content="https://router.orinai.org/og-router.png" />
+<meta property="og:site_name" content="Orin Router" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Orin Router API Reference" />
+<meta name="twitter:description" content="OpenAI-compatible endpoints: models, chat completions, streaming." />
+<meta name="twitter:image" content="https://router.orinai.org/og-router.png" />
+<meta name="theme-color" content="#04060c" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2304060c'/%3E%3Cpath d='M6 16h6l3-7 4 14 3-7h4' stroke='%239aa2ff' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="/ui/tokens.css" />
+<link rel="stylesheet" href="/ui/components.css" />
+<style>body{margin:0;background:var(--orin-bg0);color:var(--orin-txt);font-family:var(--orin-font)}main{max-width:760px;margin:0 auto;padding:40px 22px 70px}article h1{font-size:32px;letter-spacing:-.02em;margin:14px 0}article h2{font-size:20px;margin:30px 0 8px}article p,article li{color:var(--orin-mut);font-size:15px;line-height:1.7}article b{color:var(--orin-txt)}pre{background:#04070d;border:1px solid var(--orin-line);border-radius:12px;padding:14px 16px;overflow-x:auto;font-family:var(--orin-mono);font-size:13px;line-height:1.7}ol,ul{padding-left:22px}.docnav{display:flex;justify-content:space-between;gap:12px;margin-top:44px;flex-wrap:wrap}footer{border-top:1px solid var(--orin-line);padding:22px;text-align:center;color:var(--orin-dim);font-size:13px}footer a{color:var(--orin-dim);margin:0 8px}</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"Orin Router","item":"https://router.orinai.org/"},
+{"@type":"ListItem","position":2,"name":"Docs","item":"https://router.orinai.org/docs/api"},
+{"@type":"ListItem","position":3,"name":"API"}]},
+{"@type":"WebPage","url":"https://router.orinai.org/docs/api","name":"Orin Router API Reference","author":{"@type":"Person","name":"Januth Nimnal","url":"https://www.orinai.org/januth-nimnal"}}
+]}
+</script>
+</head>
+<body>
+<main>
+<nav aria-label="Breadcrumb" style="font-size:13px;color:var(--orin-dim)"><a href="https://router.orinai.org/" style="color:var(--orin-prod)">Orin Router</a> / Docs / API</nav>
+<article>
+<h1>API reference</h1>
+<p>Base URL <b>https://router.orinai.org/v1</b>. Authenticate with a gateway key: <b>Authorization: Bearer orin_…</b> All errors are OpenAI-shaped <b>{error: {message, type, code}}</b>.</p>
+<h2>GET /v1/models</h2>
+<p>Lists <b>your</b> configured models (the union of your providers' model lists). Requires a gateway key — each caller sees only their own models.</p>
+<h2>POST /v1/chat/completions</h2>
+<pre>{
+  "model": "x-ai/grok-4-1-fast",
+  "messages": [{ "role": "user", "content": "Hello" }],
+  "temperature": 0.7,
+  "max_tokens": 512,
+  "stream": false
+}</pre>
+<p>With <b>"stream": true</b> the endpoint returns SSE <b>data:</b> deltas plus <b>data: [DONE]</b>. Unknown models return 400 listing what's available.</p>
+<h2>Rate limits &amp; status codes</h2>
+<ul>
+<li><b>401</b> missing/invalid key · <b>403</b> disabled key · <b>429</b> per-key per-minute limit exceeded.</li>
+<li><b>400</b> bad body or unknown model · <b>502/504</b> all providers failed (last error surfaced).</li>
+<li>Every request is logged with request ID, provider, latency and status — inspect it in <b>Logs</b>.</li>
+</ul>
+</article>
+<div class="docnav"><a href="/docs/routing" style="color:var(--orin-prod)">← Routing</a><a href="https://router.orinai.org/" style="color:var(--orin-prod)">Orin Router →</a></div>
+</main>
+<footer><a href="https://router.orinai.org/">Router</a><a href="https://router.orinai.org/docs/introduction">Intro</a><a href="https://router.orinai.org/docs/authentication">Auth</a><a href="https://router.orinai.org/docs/providers">Providers</a><a href="https://router.orinai.org/docs/routing">Routing</a><a href="https://www.orinai.org/januth-nimnal">Januth Nimnal</a></footer>
+</body>
+</html>

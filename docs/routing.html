@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Orin Router Routing — Priority, Failover &amp; Provider Health</title>
+<meta name="description" content="How Orin Router picks providers: priority order, failover on 429/5xx/timeout, dead-key detection, cooldowns and observed health." />
+<link rel="canonical" href="https://router.orinai.org/docs/routing" />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://router.orinai.org/docs/routing" />
+<meta property="og:title" content="Orin Router Routing &amp; Failover" />
+<meta property="og:description" content="Priority order, failover semantics, cooldowns and observed provider health." />
+<meta property="og:image" content="https://router.orinai.org/og-router.png" />
+<meta property="og:site_name" content="Orin Router" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Orin Router Routing &amp; Failover" />
+<meta name="twitter:description" content="Priority order, failover semantics, cooldowns." />
+<meta name="twitter:image" content="https://router.orinai.org/og-router.png" />
+<meta name="theme-color" content="#04060c" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2304060c'/%3E%3Cpath d='M6 16h6l3-7 4 14 3-7h4' stroke='%239aa2ff' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<link rel="stylesheet" href="/ui/tokens.css" />
+<link rel="stylesheet" href="/ui/components.css" />
+<style>body{margin:0;background:var(--orin-bg0);color:var(--orin-txt);font-family:var(--orin-font)}main{max-width:760px;margin:0 auto;padding:40px 22px 70px}article h1{font-size:32px;letter-spacing:-.02em;margin:14px 0}article h2{font-size:20px;margin:30px 0 8px}article p,article li{color:var(--orin-mut);font-size:15px;line-height:1.7}article b{color:var(--orin-txt)}ol,ul{padding-left:22px}.docnav{display:flex;justify-content:space-between;gap:12px;margin-top:44px;flex-wrap:wrap}footer{border-top:1px solid var(--orin-line);padding:22px;text-align:center;color:var(--orin-dim);font-size:13px}footer a{color:var(--orin-dim);margin:0 8px}</style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@graph":[
+{"@type":"BreadcrumbList","itemListElement":[
+{"@type":"ListItem","position":1,"name":"Orin Router","item":"https://router.orinai.org/"},
+{"@type":"ListItem","position":2,"name":"Docs","item":"https://router.orinai.org/docs/routing"},
+{"@type":"ListItem","position":3,"name":"Routing"}]},
+{"@type":"WebPage","url":"https://router.orinai.org/docs/routing","name":"Orin Router Routing","author":{"@type":"Person","name":"Januth Nimnal","url":"https://www.orinai.org/januth-nimnal"}}
+]}
+</script>
+</head>
+<body>
+<main>
+<nav aria-label="Breadcrumb" style="font-size:13px;color:var(--orin-dim)"><a href="https://router.orinai.org/" style="color:var(--orin-prod)">Orin Router</a> / Docs / Routing</nav>
+<article>
+<h1>Routing</h1>
+<p>There are no manual routes to configure. For each request the router builds a candidate list from <b>your enabled providers</b> — exact model matches first, wildcards after, in the order you added them — and tries them top-down. <b>First success wins.</b></p>
+<h2>Failover semantics</h2>
+<ul>
+<li><b>429 / 5xx / timeout / unreachable</b> — that provider cools down, request moves on.</li>
+<li><b>401 / 403</b> — credentials are dead: the whole provider is skipped for the rest of the request.</li>
+<li><b>400 / 404</b> — model-level problem: next provider immediately, no cooldown.</li>
+<li><b>Streaming</b> — same rules before the first byte; once streaming, failures arrive as an in-band error (sent content can't be recalled).</li>
+</ul>
+<h2>Health is observed, never guessed</h2>
+<p>Cooldowns and latency tracking come from <b>real outcomes only</b>. The dashboard's provider health, median latencies and error rates are computed from your actual request logs — no synthetic probes, no fake status.</p>
+</article>
+<div class="docnav"><a href="/docs/providers" style="color:var(--orin-prod)">← Providers</a><a href="/docs/api" style="color:var(--orin-prod)">API →</a></div>
+</main>
+<footer><a href="https://router.orinai.org/">Router</a><a href="https://router.orinai.org/docs/introduction">Intro</a><a href="https://router.orinai.org/docs/authentication">Auth</a><a href="https://router.orinai.org/docs/providers">Providers</a><a href="https://router.orinai.org/docs/api">API</a><a href="https://www.orinai.org/januth-nimnal">Januth Nimnal</a></footer>
+</body>
+</html>
