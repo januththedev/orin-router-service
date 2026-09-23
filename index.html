@@ -24,6 +24,14 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Orin Router","applicationCategory":"DeveloperApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0"},"provider":{"@type":"Organization","name":"Orin AI","url":"https://orinai.org"}}
 </script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"What is Orin Router?","acceptedAnswer":{"@type":"Answer","text":"Orin Router puts all your AI provider keys behind one OpenAI-compatible endpoint. Add OpenRouter, Groq and custom keys, mint a single gateway key, and point any OpenAI client at it."}},
+{"@type":"Question","name":"Which providers does Orin Router support?","acceptedAnswer":{"@type":"Answer","text":"OpenRouter, Groq, and any custom OpenAI-compatible base URL. Each provider declares which models it serves; providers with no list act as wildcards."}},
+{"@type":"Question","name":"How does Orin Router failover work?","acceptedAnswer":{"@type":"Answer","text":"Requests try your enabled providers top-down and the first success wins. Rate limits, server errors and timeouts move to the next provider; dead credentials skip the whole provider."}},
+{"@type":"Question","name":"Are my provider API keys safe with Orin Router?","acceptedAnswer":{"@type":"Answer","text":"Keys are AES-GCM encrypted in the database, never shown again after saving, never logged, and only hashes of gateway keys are stored."}}
+]}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
