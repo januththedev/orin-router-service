@@ -10,107 +10,271 @@
 <meta property="og:description" content="Bring your own keys. Get one endpoint. Automatic failover. By Orin AI." />
 <meta property="og:url" content="https://router.orinai.org/" />
 <meta property="og:type" content="website" />
-<meta name="theme-color" content="#05070d" />
+<meta name="theme-color" content="#04060c" />
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2305070d'/%3E%3Cpath d='M6 16h6l3-7 4 14 3-7h4' stroke='%235eead4' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Orin Router","applicationCategory":"DeveloperApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0"},"provider":{"@type":"Organization","name":"Orin AI","url":"https://orinai.org"}}
 </script>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
 <style>
-:root{--bg:#05070d;--panel:#0a0f1a;--line:#1b2740;--txt:#dbe7ff;--mut:#8494b3;--acc:#5eead4;--bad:#f87171;--warn:#fbbf24;--ok:#34d399}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-a{color:var(--acc)}header{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--line)}
-.logo{font-family:monospace;font-weight:700;color:var(--acc)}.sp{flex:1}.mut{color:var(--mut)}
-main{max-width:1060px;margin:0 auto;padding:24px 20px 60px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin:14px 0}
-.btn{background:var(--acc);color:#04211c;border:0;border-radius:9px;padding:9px 16px;font-weight:700;cursor:pointer}
-.btn.ghost{background:transparent;color:var(--acc);border:1px solid var(--acc)}
-.btn.danger{background:transparent;color:var(--bad);border:1px solid var(--bad)}
-.btn.small{padding:5px 10px;font-size:13px}
-input,select{width:100%;background:#060b15;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:9px 11px;margin:6px 0}
-label{font-size:12px;color:var(--mut)}code{font-family:monospace;background:#060b15;padding:2px 6px;border-radius:6px}
-pre{background:#020409;border:1px solid var(--line);border-radius:10px;padding:12px;overflow-x:auto;font-size:13px}
-.hero h1{font-size:clamp(28px,5vw,52px);margin:10px 0}h2{margin:6px 0 10px}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
-.item{display:flex;gap:10px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0}
-.mono{font-family:monospace;font-size:13px;word-break:break-all}
-.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
-.stat{font-size:26px;font-weight:800}footer{border-top:1px solid var(--line);padding:18px 20px;color:var(--mut);font-size:13px;display:flex;gap:14px;flex-wrap:wrap}
-.hidden{display:none!important}table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);font-family:monospace}
+:root{
+  --bg0:#04060c;
+  --panel:rgba(148,184,255,.045); --panel2:rgba(148,184,255,.08);
+  --line:rgba(148,184,255,.14); --line2:rgba(148,184,255,.22);
+  --txt:#e9f1ff; --mut:#8f9cbd; --dim:#5c6884;
+  --acc:#5eead4; --acc-d:#04211c; --vio:#8b93ff;
+  --bad:#f87171; --ok:#34d399; --warn:#fbbf24;
+  --r:16px; --r-s:10px;
+  --font:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg0);color:var(--txt);font-family:var(--font);-webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(720px 380px at 12% -4%,rgba(94,234,212,.10),transparent 60%),
+             radial-gradient(820px 420px at 88% 6%,rgba(139,147,255,.12),transparent 60%),
+             radial-gradient(600px 500px at 50% 110%,rgba(94,234,212,.05),transparent 60%)}
+main,header,footer{position:relative;z-index:1}
+a{color:var(--acc);text-decoration:none}
+/* nav */
+.nav{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:13px 22px;
+  background:rgba(4,6,12,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-weight:700;color:var(--acc);font-size:15px}
+.brand .dot{width:9px;height:9px;border-radius:50%;background:var(--acc);box-shadow:0 0 12px var(--acc);animation:pulse 2.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+.nav .sp{flex:1}
+.nav-links{display:flex;gap:4px;align-items:center}
+.nav-links a{color:var(--mut);font-size:13.5px;font-weight:500;padding:7px 12px;border-radius:8px}
+.nav-links a:hover{color:var(--txt);background:var(--panel2)}
+.userchip{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut);border:1px solid var(--line);border-radius:99px;padding:6px 13px;background:var(--panel)}
+.userchip b{color:var(--txt);font-weight:600}
+/* layout */
+main{max-width:1120px;margin:0 auto;padding:0 22px 70px}
+/* hero */
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center;padding:64px 0 30px}
+@media(max-width:900px){.hero{grid-template-columns:1fr;padding-top:44px}}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--acc);
+  border:1px solid rgba(94,234,212,.3);background:rgba(94,234,212,.07);padding:6px 13px;border-radius:99px}
+.hero h1{font-size:clamp(34px,5.4vw,60px);line-height:1.04;margin:18px 0 16px;font-weight:800;letter-spacing:-.02em}
+.hero h1 .grad{background:linear-gradient(92deg,var(--acc),var(--vio));-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero p.sub{color:var(--mut);font-size:16.5px;line-height:1.65;margin:0 0 26px;max-width:52ch}
+.hero p.sub b{color:var(--txt);font-weight:600}
+.hero p.sub code{font-family:var(--mono);font-size:.86em;background:var(--panel2);border:1px solid var(--line);padding:2px 7px;border-radius:7px;color:var(--acc)}
+.cta-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.hero-meta{display:flex;gap:18px;margin-top:26px;flex-wrap:wrap}
+.hero-meta div{font-size:13px;color:var(--dim)}
+.hero-meta b{display:block;font-size:19px;color:var(--txt);font-weight:700}
+/* code window */
+.win{background:#070b14;border:1px solid var(--line2);border-radius:14px;overflow:hidden;box-shadow:0 30px 80px -20px rgba(0,0,0,.7),0 0 60px -30px rgba(94,234,212,.25)}
+.win-bar{display:flex;align-items:center;gap:7px;padding:11px 14px;border-bottom:1px solid var(--line);background:rgba(148,184,255,.04)}
+.win-bar i{width:11px;height:11px;border-radius:50%}
+.win-bar i:nth-child(1){background:#f87171}.win-bar i:nth-child(2){background:#fbbf24}.win-bar i:nth-child(3){background:#34d399}
+.win-bar span{margin-left:8px;font-family:var(--mono);font-size:12px;color:var(--dim)}
+.win-body{padding:16px 18px 20px;font-family:var(--mono);font-size:13px;line-height:1.8}
+.win-body .k{color:var(--vio)} .win-body .s{color:var(--acc)} .win-body .c{color:var(--dim)} .win-body .f{color:#fbbf24}
+/* cards / forms */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:24px;margin:18px 0}
+.card h2{margin:0 0 6px;font-size:19px;font-weight:700;letter-spacing:-.01em}
+.card h2 .sub{font-weight:400;font-size:13px;color:var(--mut)}
+.card p.desc{color:var(--mut);font-size:14px;line-height:1.6;margin:0 0 14px}
+label{display:block;font-size:12.5px;font-weight:600;color:var(--mut);margin:12px 0 5px;letter-spacing:.02em}
+input,select{width:100%;background:rgba(2,5,11,.7);border:1px solid var(--line);color:var(--txt);border-radius:var(--r-s);
+  padding:11px 13px;margin:0;font-size:14px;font-family:var(--font);transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px rgba(94,234,212,.14)}
+input::placeholder{color:var(--dim)}
+code{font-family:var(--mono);font-size:.86em;background:var(--panel2);border:1px solid var(--line);padding:2px 7px;border-radius:7px;color:var(--acc)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.sp{flex:1}.mut{color:var(--mut)}
+.mono{font-family:var(--mono);font-size:13px;word-break:break-all}
+.hidden{display:none!important}
+/* buttons */
+.btn{background:linear-gradient(180deg,#6ff5e0,#4ed9c3);color:var(--acc-d);border:0;border-radius:11px;padding:11px 20px;font-weight:700;font-size:14px;cursor:pointer;
+  font-family:var(--font);transition:transform .12s,filter .12s;box-shadow:0 8px 24px -8px rgba(94,234,212,.45)}
+.btn:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn.ghost{background:transparent;color:var(--acc);border:1px solid rgba(94,234,212,.4);box-shadow:none}
+.btn.ghost:hover{background:rgba(94,234,212,.08)}
+.btn.danger{background:transparent;color:var(--bad);border:1px solid rgba(248,113,113,.4);box-shadow:none}
+.btn.danger:hover{background:rgba(248,113,113,.08)}
+.btn.small{padding:7px 13px;font-size:13px;border-radius:9px}
+.btn[disabled]{opacity:.55;cursor:wait;transform:none}
+/* tabs */
+.tabs{display:inline-flex;background:rgba(2,5,11,.7);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+.tabs button{border:0;background:transparent;color:var(--mut);font-family:var(--font);font-weight:600;font-size:13.5px;padding:8px 18px;border-radius:9px;cursor:pointer}
+.tabs button.on{background:var(--panel2);color:var(--txt);box-shadow:inset 0 0 0 1px var(--line2)}
+/* dashboard */
+.dash-head{display:flex;gap:12px;align-items:center;padding:26px 0 4px;flex-wrap:wrap}
+.dash-head h1{font-size:26px;margin:0;font-weight:800;letter-spacing:-.01em}
+.step{display:flex;gap:12px;align-items:flex-start;margin:2px 0 14px}
+.step .n{flex:none;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;
+  background:rgba(94,234,212,.1);border:1px solid rgba(94,234,212,.35);color:var(--acc)}
+.step h3{margin:2px 0 4px;font-size:15.5px}
+.step p{margin:0;color:var(--mut);font-size:13.5px;line-height:1.6}
+.item{display:flex;gap:14px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:13px 16px;margin:10px 0;background:rgba(2,5,11,.45);transition:border-color .15s}
+.item:hover{border-color:var(--line2)}
+.item .sdot{width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok);flex:none}
+.item .sdot.off{background:var(--dim);box-shadow:none}
+.item .grow{flex:1;min-width:0}
+.item .t1{font-family:var(--mono);font-size:13.5px;font-weight:500}
+.item .t2{font-size:12.5px;color:var(--dim);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.status{font-size:12px;font-weight:700;padding:4px 11px;border-radius:99px;white-space:nowrap}
+.status.on{color:var(--ok);background:rgba(52,211,153,.09);border:1px solid rgba(52,211,153,.3)}
+.status.off{color:var(--dim);background:rgba(92,104,132,.1);border:1px solid var(--line)}
+.status.err{color:var(--bad);background:rgba(248,113,113,.09);border:1px solid rgba(248,113,113,.3)}
+.keyonce{border:1px solid rgba(94,234,212,.35);background:rgba(94,234,212,.06);border-radius:12px;padding:14px 16px;margin:12px 0}
+.keyonce .k{font-family:var(--mono);font-size:13px;color:var(--acc);word-break:break-all;display:block;margin:8px 0}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+.stat .v{font-size:30px;font-weight:800;letter-spacing:-.02em}
+.stat .l{font-size:12.5px;color:var(--mut);margin-top:4px;text-transform:uppercase;letter-spacing:.07em;font-weight:600}
+.stat .v.ok{color:var(--ok)} .stat .v.bad{color:var(--bad)}
+/* table */
+.tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:rgba(2,5,11,.45)}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
+th{text-align:left;padding:10px 14px;font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);font-weight:700;border-bottom:1px solid var(--line);background:rgba(148,184,255,.03)}
+td{padding:10px 14px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:12.5px;color:var(--txt)}
+tr:last-child td{border-bottom:0}
+td.ok{color:var(--ok)} td.bad{color:var(--bad)}
+/* feature cards */
+.feat{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:22px;transition:transform .15s,border-color .15s}
+.feat:hover{transform:translateY(-3px);border-color:var(--line2)}
+.feat .ico{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:19px;margin-bottom:12px;
+  background:rgba(94,234,212,.09);border:1px solid rgba(94,234,212,.25)}
+.feat h3{margin:0 0 8px;font-size:15.5px}
+.feat p{margin:0;color:var(--mut);font-size:13.5px;line-height:1.6}
+/* footer / toast */
+footer{border-top:1px solid var(--line);padding:22px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:center;color:var(--dim);font-size:13px}
+#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:#0b1220;border:1px solid var(--line2);
+  padding:11px 20px;border-radius:12px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:99;
+  box-shadow:0 16px 40px -10px rgba(0,0,0,.7);max-width:min(92vw,560px);font-family:var(--mono);font-size:12.5px}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+details{margin-top:12px}summary{cursor:pointer;font-size:13px}
+.empty{border:1px dashed var(--line2);border-radius:12px;padding:26px;text-align:center;color:var(--dim);font-size:14px}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(4,33,28,.3);border-top-color:var(--acc-d);border-radius:50%;animation:rot .7s linear infinite;vertical-align:-2px}
+@keyframes rot{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
-<header><span class="logo">≋ orin router</span><span class="sp"></span><span class="mut">by Orin AI</span></header>
+<header class="nav">
+  <span class="brand"><span class="dot"></span>≋ orin router</span>
+  <span class="sp"></span>
+  <nav class="nav-links"><a href="https://orinai.org">Orin AI</a><a href="https://chat.orinai.org">Chat</a><a href="https://console.orinai.org">Console</a><a href="https://github.com/januththedev/orin-router-service">GitHub</a></nav>
+  <span class="userchip hidden" id="nav-user">👤 <b id="nav-who"></b></span>
+</header>
 <main>
 <section id="view-home">
   <div class="hero">
-    <h1>Many APIs in.<br />One API out.</h1>
-    <p class="mut">Add your <b>OpenRouter</b>, <b>Groq</b> and <b>OpenAI-compatible</b> keys. Get <b>one endpoint</b> + <b>one key</b> that fans out across all of them with automatic failover. OpenAI SDKs work unchanged.</p>
-    <div class="row"><button class="btn" id="btn-start">Open dashboard</button><a class="mut" href="https://orinai.org">orinai.org</a><a class="mut" href="https://github.com/januththedev/orin-router-service">GitHub</a></div>
+    <div>
+      <span class="eyebrow">● live · automatic failover</span>
+      <h1>Many APIs in.<br /><span class="grad">One API out.</span></h1>
+      <p class="sub">Add your <b>OpenRouter</b>, <b>Groq</b> and <b>OpenAI-compatible</b> keys. Get <b>one endpoint</b> + <b>one key</b> that fans out across all of them. Any OpenAI SDK works unchanged.</p>
+      <div class="cta-row"><button class="btn" id="btn-start">Open dashboard →</button></div>
+      <div class="hero-meta">
+        <div><b>1</b>endpoint + key</div>
+        <div><b>∞</b>providers per user</div>
+        <div><b>0</b>config files</div>
+      </div>
+    </div>
+    <div class="win" aria-hidden="true">
+      <div class="win-bar"><i></i><i></i><i></i><span>your_app.py</span></div>
+      <div class="win-body"><span class="k">from</span> openai <span class="k">import</span> OpenAI<br />client = OpenAI(<br />&nbsp;&nbsp;base_url=<span class="s">"https://router.orinai.org/v1"</span>,<br />&nbsp;&nbsp;api_key=<span class="s">"orin_…"</span> <span class="c"># one key</span><br />)<br />client.chat.completions.create(<br />&nbsp;&nbsp;model=<span class="s">"x-ai/grok-4-1-fast"</span>,<br />&nbsp;&nbsp;messages=[{<span class="s">"role"</span>: <span class="s">"user"</span>,<br />&nbsp;&nbsp;&nbsp;&nbsp;<span class="s">"content"</span>: <span class="s">"Hello"</span>}]<br />) <span class="f"># → or1 ✓ (or2 on failure)</span></div>
+    </div>
   </div>
-  <div class="card" id="connect-card"><h2>Sign in <span class="mut" style="font-weight:400;font-size:13px">same account as Orin Chat</span></h2>
-    <div class="row" style="margin-bottom:8px">
-      <button class="btn ghost small" id="tab-login">Sign in</button>
-      <button class="btn ghost small" id="tab-register">Create account</button>
+
+  <div class="card" id="connect-card"><h2>Sign in <span class="sub">· same account as Orin Chat</span></h2>
+    <p class="desc">Your providers and keys belong to your Orin account. Provider keys are encrypted server-side and never shown again.</p>
+    <div class="row" style="margin-bottom:4px">
+      <div class="tabs"><button id="tab-login" class="on">Sign in</button><button id="tab-register">Create account</button></div>
       <span class="sp"></span><span class="mut" id="who"></span>
     </div>
     <div id="pane-login">
       <label>Email or phone</label><input id="li-id" placeholder="you@example.com" autocomplete="username" />
       <label>Password</label><input id="li-pw" type="password" autocomplete="current-password" />
-      <div class="row"><button class="btn" id="btn-login">Sign in</button><span class="mut" id="li-msg"></span></div>
+      <div class="row" style="margin-top:14px"><button class="btn" id="btn-login">Sign in</button><span class="mut" id="li-msg"></span></div>
     </div>
     <div id="pane-register" class="hidden">
-      <label>Name</label><input id="rg-name" placeholder="Your name" autocomplete="name" />
+      <div class="grid" style="grid-template-columns:1fr 1fr">
+        <div><label>Name</label><input id="rg-name" placeholder="Your name" autocomplete="name" /></div>
+        <div><label>Phone</label><input id="rg-phone" placeholder="+9477…" autocomplete="tel" /></div>
+      </div>
       <label>Email</label><input id="rg-email" placeholder="you@example.com" autocomplete="email" />
-      <label>Phone</label><input id="rg-phone" placeholder="+9477…" autocomplete="tel" />
-      <label>Password</label><input id="rg-pw" type="password" autocomplete="new-password" />
-      <label>Confirm password</label><input id="rg-pw2" type="password" autocomplete="new-password" />
-      <div class="row"><button class="btn" id="btn-register">Create account</button><span class="mut" id="rg-msg"></span></div>
+      <div class="grid" style="grid-template-columns:1fr 1fr">
+        <div><label>Password</label><input id="rg-pw" type="password" autocomplete="new-password" /></div>
+        <div><label>Confirm password</label><input id="rg-pw2" type="password" autocomplete="new-password" /></div>
+      </div>
+      <div class="row" style="margin-top:14px"><button class="btn" id="btn-register">Create account</button><span class="mut" id="rg-msg"></span></div>
     </div>
-    <details style="margin-top:10px"><summary class="mut">Advanced: use a token instead</summary>
+    <details><summary class="mut">Advanced: use a token instead</summary>
       <label>Orin session or MCP credential</label><input id="token" type="password" placeholder="orin session or orin_mcp_…" autocomplete="off" />
-      <div class="row"><button class="btn ghost small" id="btn-save">Save token</button><button class="btn ghost small" id="btn-clear">Forget</button></div>
+      <div class="row" style="margin-top:12px"><button class="btn ghost small" id="btn-save">Save token</button><button class="btn ghost small" id="btn-clear">Forget</button></div>
     </details>
   </div>
-  <div class="grid">
-    <div class="card"><h2>1 · Add APIs</h2><p class="mut">Paste keys from any provider. List the models each one serves — or leave blank for “any model”.</p></div>
-    <div class="card"><h2>2 · Get 1 API</h2><p class="mut">Mint one <code>orin_…</code> key. Point any OpenAI client at <code>/v1</code>. Done.</p></div>
-    <div class="card"><h2>3 · Survives outages</h2><p class="mut">429/5xx/timeout/dead key → next provider, same request. Health is observed, never guessed.</p></div>
+
+  <div class="grid" style="margin-top:6px">
+    <div class="feat"><div class="ico">🔌</div><h3>1 · Add APIs</h3><p>Paste keys from any provider. List the models each one serves — or leave blank for “any model”.</p></div>
+    <div class="feat"><div class="ico">🔑</div><h3>2 · Get 1 API</h3><p>Mint one <code>orin_…</code> key. Point any OpenAI client at <code>/v1</code>. Done.</p></div>
+    <div class="feat"><div class="ico">🛡</div><h3>3 · Survives outages</h3><p>429 / 5xx / timeout / dead key → next provider, same request. Health is observed, never guessed.</p></div>
   </div>
 </section>
 
 <section id="view-dash" class="hidden">
-  <div class="row"><button class="btn ghost" id="btn-back">← home</button><span class="sp"></span><button class="btn danger" id="btn-forget">Forget token</button></div>
-
-  <div class="card"><h2>Your gateway key</h2>
-    <p class="mut">One endpoint, one key, all your providers behind it:</p>
-    <pre>base_url = "https://router.orinai.org/v1"
-api_key  = "orin_…"</pre>
-    <div class="row"><button class="btn" id="btn-mint">Mint new key</button><input id="key-name" placeholder="key name (e.g. Production)" style="max-width:260px" /></div>
-    <div id="keys"></div>
+  <div class="dash-head">
+    <button class="btn ghost small" id="btn-back">← Home</button>
+    <h1>Dashboard</h1>
+    <span class="sp"></span>
+    <button class="btn danger small" id="btn-forget">Sign out</button>
   </div>
 
-  <div class="card"><h2>Add an API</h2>
-    <div class="grid">
-      <div><label>ID (a-z0-9_-)</label><input id="p-id" placeholder="or1" /></div>
-      <div><label>Type</label><select id="p-type"><option value="openrouter">OpenRouter</option><option value="groq">Groq</option><option value="custom">Custom (OpenAI-compatible)</option></select></div>
-    </div>
-    <div id="p-url-wrap" class="hidden"><label>Base URL (custom only)</label><input id="p-url" placeholder="https://api.example.com/v1" /></div>
-    <label>API key (stored encrypted, never shown again)</label><input id="p-key" type="password" placeholder="sk-or-… / gsk_…" autocomplete="off" />
-    <label>Models, comma separated (blank = serves any model)</label><input id="p-models" placeholder="x-ai/grok-4-1-fast, llama-3.3-70b-versatile" />
+  <div class="card"><h2>🔑 Your gateway key</h2>
+    <p class="desc">One endpoint, one key — every provider you add sits behind it:</p>
+    <div class="win" style="box-shadow:none;margin-bottom:14px"><div class="win-body" style="min-height:0;padding:13px 16px">base_url = <span class="s">"https://router.orinai.org/v1"</span><br />api_key&nbsp;&nbsp;= <span class="s">"orin_…"</span></div></div>
+    <div class="row"><button class="btn" id="btn-mint">＋ Mint new key</button><input id="key-name" placeholder="key name (e.g. Production)" style="max-width:250px" /></div>
+    <div id="key-once"></div>
+    <div id="keys" style="margin-top:6px"></div>
+  </div>
+
+  <div class="card"><h2>🔌 Your APIs</h2>
+    <p class="desc">Add as many as you like. Requests try them in order — first success wins.</p>
+    <div class="step"><span class="n">1</span><div style="flex:1;min-width:240px">
+      <div class="grid" style="grid-template-columns:1fr 1fr">
+        <div><label>ID (a-z0-9_-)</label><input id="p-id" placeholder="or1" /></div>
+        <div><label>Type</label><select id="p-type"><option value="openrouter">OpenRouter</option><option value="groq">Groq</option><option value="custom">Custom (OpenAI-compatible)</option></select></div>
+      </div>
+      <div id="p-url-wrap" class="hidden"><label>Base URL (custom only)</label><input id="p-url" placeholder="https://api.example.com/v1" /></div>
+    </div></div>
+    <div class="step"><span class="n">2</span><div style="flex:1;min-width:240px">
+      <label style="margin-top:0">API key <span class="mut" style="font-weight:400">· stored encrypted, never shown again</span></label><input id="p-key" type="password" placeholder="sk-or-… / gsk_…" autocomplete="off" />
+      <label>Models, comma separated <span class="mut" style="font-weight:400">· blank = serves any model</span></label><input id="p-models" placeholder="x-ai/grok-4-1-fast, llama-3.3-70b-versatile" />
+    </div></div>
     <div class="row"><button class="btn" id="btn-add">Save provider</button><span class="mut" id="p-msg"></span></div>
-    <div id="providers"></div>
+    <div id="providers" style="margin-top:10px"></div>
   </div>
 
-  <div class="card"><h2>Usage</h2><div class="grid" id="stats"></div></div>
+  <div class="card"><h2>📊 Usage</h2><div class="grid" id="stats" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))"></div></div>
 
-  <div class="card"><h2>Recent requests</h2><div style="overflow-x:auto"><table><thead><tr><th>time</th><th>requested</th><th>provider</th><th>status</th><th>ms</th><th>error</th></tr></thead><tbody id="logs"></tbody></table></div></div>
+  <div class="card"><h2>🧾 Recent requests</h2><div class="tblwrap"><table><thead><tr><th>time</th><th>requested</th><th>provider</th><th>status</th><th>ms</th><th>error</th></tr></thead><tbody id="logs"></tbody></table></div></div>
 </section>
 </main>
-<footer><span>© 2026 Orin AI · Januth Nimnal</span><span>·</span><a href="https://orinai.org">orinai.org</a><a href="https://chat.orinai.org">Chat</a><a href="https://tools.orinai.org">Tools</a><a href="https://console.orinai.org">Console</a></footer>
+<footer><span>© 2026 Orin AI · Januth Nimnal</span><a href="https://orinai.org">orinai.org</a><a href="https://chat.orinai.org">Chat</a><a href="https://tools.orinai.org">Tools</a><a href="https://console.orinai.org">Console</a></footer>
+<div id="toast"></div>
 <script>
 const $ = (id) => document.getElementById(id);
+let toastTimer = null;
+function toast(msg) {
+  const el = $('toast'); el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+}
+async function copyText(s) {
+  try { await navigator.clipboard.writeText(s); return true; }
+  catch {
+    const ta = document.createElement('textarea'); ta.value = s; document.body.appendChild(ta);
+    ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch {}
+    ta.remove(); return ok;
+  }
+}
 const auth = () => ({ 'Content-Type': 'application/json', Authorization: 'Bearer ' + (localStorage.getItem('orin_token') || '') });
 const api = async (path, opts = {}) => {
   const r = await fetch(path, { ...opts, headers: { ...auth(), ...(opts.headers || {}) } });
@@ -134,41 +298,70 @@ async function coreLogin(action, body) {
 }
 function signedInUser() { try { return JSON.parse(localStorage.getItem('orin_user') || 'null'); } catch { return null; } }
 function signOut() { localStorage.removeItem('orin_token'); localStorage.removeItem('orin_user'); paintWho(); }
-function paintWho() { const u = signedInUser(); const el = $('who'); if (el) el.textContent = u ? `signed in as ${u.email || u.name || 'you'}` : ''; }
-$('tab-login').onclick = () => { $('pane-login').classList.remove('hidden'); $('pane-register').classList.add('hidden'); };
-$('tab-register').onclick = () => { $('pane-register').classList.remove('hidden'); $('pane-login').classList.add('hidden'); };
-$('btn-login').onclick = async () => {
+function paintWho() {
+  const u = signedInUser();
+  const label = u ? `${u.email || u.name || 'you'}` : '';
+  const w = $('who'); if (w) w.textContent = label ? `signed in as ${label}` : '';
+  const chip = $('nav-user'), nw = $('nav-who');
+  if (chip && nw) { if (label) { nw.textContent = label; chip.classList.remove('hidden'); } else chip.classList.add('hidden'); }
+}
+function setTab(which) {
+  const login = which === 'login';
+  $('tab-login').classList.toggle('on', login);
+  $('tab-register').classList.toggle('on', !login);
+  $('pane-login').classList.toggle('hidden', !login);
+  $('pane-register').classList.toggle('hidden', login);
+}
+$('tab-login').onclick = () => setTab('login');
+$('tab-register').onclick = () => setTab('register');
+async function busy(btn, fn) {
+  const old = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spin"></span>';
+  try { await fn(); } finally { btn.disabled = false; btn.innerHTML = old; }
+}
+$('btn-login').onclick = () => busy($('btn-login'), async () => {
   try {
-    $('li-msg').textContent = 'signing in…';
     await coreLogin('login', { identifier: $('li-id').value.trim(), password: $('li-pw').value });
     $('li-msg').textContent = ''; $('li-pw').value = '';
+    toast('Signed in ✓');
     openDash();
   } catch (e) { $('li-msg').textContent = e.message; }
-};
-$('btn-register').onclick = async () => {
+});
+$('btn-register').onclick = () => busy($('btn-register'), async () => {
   try {
-    $('rg-msg').textContent = 'creating…';
     await coreLogin('register', { name: $('rg-name').value.trim(), email: $('rg-email').value.trim(), phone: $('rg-phone').value.trim(), password: $('rg-pw').value, confirmPassword: $('rg-pw2').value });
     $('rg-msg').textContent = ''; $('rg-pw').value = ''; $('rg-pw2').value = '';
+    toast('Account created ✓');
     openDash();
   } catch (e) { $('rg-msg').textContent = e.message; }
-};
+});
 $('btn-save').onclick = () => { localStorage.setItem('orin_token', $('token').value.trim()); localStorage.removeItem('orin_user'); paintWho(); openDash(); };
 $('btn-clear').onclick = () => { signOut(); $('token').value = ''; };
-$('btn-forget').onclick = () => { signOut(); show('view-home'); };
+$('btn-forget').onclick = () => { signOut(); show('view-home'); toast('Signed out'); };
 paintWho();
 $('p-type').onchange = () => $('p-url-wrap').classList.toggle('hidden', $('p-type').value !== 'custom');
 
-$('btn-mint').onclick = async () => {
-  const name = $('key-name').value.trim() || 'default';
-  const { key, prefix } = await api('/api/keys', { method: 'POST', body: JSON.stringify({ name }) }).catch((e) => alert(e.message));
-  if (!key) return;
-  await navigator.clipboard.writeText(key).catch(() => {});
-  alert(`Gateway key copied (shown ONCE, prefix ${prefix}):\n${key}`);
-  loadKeys();
-};
+$('btn-mint').onclick = () => busy($('btn-mint'), async () => {
+  try {
+    const name = $('key-name').value.trim() || 'default';
+    const { key, prefix } = await api('/api/keys', { method: 'POST', body: JSON.stringify({ name }) });
+    await copyText(key);
+    $('key-once').innerHTML = '';
+    const box = document.createElement('div'); box.className = 'keyonce';
+    box.innerHTML = `<b>🔑 New gateway key — copy it now, it will never be shown again</b><span class="k"></span><div class="row"></div>`;
+    box.querySelector('.k').textContent = key;
+    const b = document.createElement('button'); b.className = 'btn small'; b.textContent = '⧉ Copy again';
+    b.onclick = async () => { await copyText(key); toast('Key copied ✓'); };
+    const x = document.createElement('button'); x.className = 'btn ghost small'; x.textContent = 'Hide';
+    x.onclick = () => box.remove();
+    box.querySelector('.row').append(b, x);
+    $('key-once').appendChild(box);
+    $('key-name').value = '';
+    toast(`Key ${prefix}… minted + copied ✓`);
+    loadKeys();
+  } catch (e) { toast(e.message); }
+});
 
-$('btn-add').onclick = async () => {
+$('btn-add').onclick = () => busy($('btn-add'), async () => {
   try {
     $('p-msg').textContent = 'saving…';
     await api('/api/providers', { method: 'POST', body: JSON.stringify({
@@ -176,20 +369,21 @@ $('btn-add').onclick = async () => {
       baseUrl: $('p-url').value.trim(), apiKey: $('p-key').value,
       models: $('p-models').value.split(',').map((s) => s.trim()).filter(Boolean),
     }) });
-    $('p-msg').textContent = 'saved ✓'; $('p-key').value = '';
+    $('p-msg').textContent = 'saved ✓'; $('p-key').value = ''; $('p-id').value = ''; $('p-models').value = '';
+    toast('Provider saved ✓');
     loadProviders();
   } catch (e) { $('p-msg').textContent = e.message; }
-};
+});
 
 async function loadKeys() {
   const { keys } = await api('/api/keys');
-  $('keys').innerHTML = keys.length ? '' : '<p class="mut">No keys yet — mint one above.</p>';
+  $('keys').innerHTML = keys.length ? '' : '<div class="empty">No keys yet — mint one above.</div>';
   for (const k of keys) {
     const d = document.createElement('div'); d.className = 'item';
-    d.innerHTML = `<span class="mono">${esc(k.name)} · <code>${esc(k.prefix)}…</code> · ${k.enabled ? '<span class="ok">active</span>' : '<span class="bad">revoked</span>'}</span>`;
+    d.innerHTML = `<span class="sdot${k.enabled ? '' : ' off'}"></span><span class="grow"><span class="t1">${esc(k.name)}</span><span class="t2" style="display:block"><code>${esc(k.prefix)}…</code>${k.perMin ? ` · ${k.perMin}/min` : ''}</span></span><span class="status ${k.enabled ? 'on' : 'off'}">${k.enabled ? 'active' : 'revoked'}</span>`;
     if (k.enabled) {
       const b = document.createElement('button'); b.className = 'btn danger small'; b.textContent = 'Revoke';
-      b.onclick = async () => { if (!confirm('Revoke this key? Apps using it break immediately.')) return; await api('/api/keys?id=' + k.id, { method: 'DELETE' }); loadKeys(); };
+      b.onclick = async () => { if (!confirm('Revoke this key? Apps using it break immediately.')) return; await api('/api/keys?id=' + k.id, { method: 'DELETE' }); toast('Key revoked'); loadKeys(); };
       d.appendChild(b);
     }
     $('keys').appendChild(d);
@@ -198,15 +392,24 @@ async function loadKeys() {
 
 async function loadProviders() {
   const { providers } = await api('/api/providers');
-  $('providers').innerHTML = providers.length ? '' : '<p class="mut">No providers yet — add your first API above.</p>';
+  $('providers').innerHTML = providers.length ? '' : '<div class="empty">No providers yet — add your first API above.</div>';
   for (const p of providers) {
     const d = document.createElement('div'); d.className = 'item';
-    d.innerHTML = `<span class="mono">${esc(p.id)} · ${esc(p.type)} · ${p.enabled ? '<span class="ok">on</span>' : '<span class="bad">off</span>'}<br /><span class="mut">${esc((p.models || []).join(', ') || 'any model')}</span></span>`;
+    d.innerHTML = `<span class="sdot${p.enabled ? '' : ' off'}"></span><span class="grow"><span class="t1">${esc(p.id)} <span class="mut">· ${esc(p.type)}</span></span><span class="t2" style="display:block">${esc((p.models || []).join(', ') || 'any model')}</span></span><span class="status" data-test>—</span>`;
     const wrap = document.createElement('span'); wrap.className = 'row';
     const t = document.createElement('button'); t.className = 'btn ghost small'; t.textContent = 'Test';
-    t.onclick = async () => { t.textContent = '…'; try { const r = await api('/api/providers', { method: 'POST', body: JSON.stringify({ action: 'test', id: p.id }) }); t.textContent = r.ok ? '✓ ok' : '✗ fail'; } catch (e) { t.textContent = '✗ fail'; } setTimeout(loadProviders, 1200); };
+    t.onclick = () => busy(t, async () => {
+      try {
+        const r = await api('/api/providers', { method: 'POST', body: JSON.stringify({ action: 'test', id: p.id }) });
+        const st = d.querySelector('[data-test]');
+        st.textContent = r.ok ? `✓ ${r.latencyMs}ms` : '✗ fail';
+        st.className = 'status ' + (r.ok ? 'on' : 'err');
+        if (!r.ok) toast('Test failed: ' + (r.error || 'unknown'));
+      } catch { const st = d.querySelector('[data-test]'); st.textContent = '✗ fail'; st.className = 'status err'; }
+      setTimeout(loadProviders, 1500);
+    });
     const del = document.createElement('button'); del.className = 'btn danger small'; del.textContent = 'Delete';
-    del.onclick = async () => { if (!confirm(`Delete provider ${p.id}?`)) return; await api('/api/providers?id=' + p.id, { method: 'DELETE' }); loadProviders(); };
+    del.onclick = async () => { if (!confirm(`Delete provider ${p.id}?`)) return; await api('/api/providers?id=' + p.id, { method: 'DELETE' }); toast('Provider deleted'); loadProviders(); };
     wrap.appendChild(t); wrap.appendChild(del); d.appendChild(wrap);
     $('providers').appendChild(d);
   }
@@ -214,19 +417,23 @@ async function loadProviders() {
 
 async function loadStats() {
   const s = await api('/api/stats');
-  $('stats').innerHTML = `<div><div class="stat">${s.total}</div><div class="mut">requests</div></div><div><div class="stat ok">${s.ok}</div><div class="mut">ok</div></div><div><div class="stat bad">${s.errors}</div><div class="mut">errors</div></div><div><div class="stat">${s.avgLatencyMs}ms</div><div class="mut">avg latency</div></div>`;
+  $('stats').innerHTML =
+    `<div class="stat"><div class="v">${s.total}</div><div class="l">requests</div></div>` +
+    `<div class="stat"><div class="v ok">${s.ok}</div><div class="l">ok</div></div>` +
+    `<div class="stat"><div class="v bad">${s.errors}</div><div class="l">errors</div></div>` +
+    `<div class="stat"><div class="v">${s.avgLatencyMs}<span style="font-size:15px">ms</span></div><div class="l">avg latency</div></div>`;
 }
 
 async function loadLogs() {
   const { logs } = await api('/api/logs?limit=30');
-  $('logs').innerHTML = logs.map((l) => `<tr><td>${new Date(l.at).toLocaleString()}</td><td>${esc(l.requested)}</td><td>${esc(l.provider || '—')}</td><td class="${l.status === 'ok' ? 'ok' : 'bad'}">${esc(l.status)}</td><td>${l.latencyMs}</td><td>${esc((l.error || '').slice(0, 80))}</td></tr>`).join('') || '<tr><td colspan="6" class="mut">no traffic yet</td></tr>';
+  $('logs').innerHTML = logs.map((l) => `<tr><td>${new Date(l.at).toLocaleString()}</td><td>${esc(l.requested)}</td><td>${esc(l.provider || '—')}</td><td class="${l.status === 'ok' ? 'ok' : 'bad'}">${esc(l.status)}</td><td>${l.latencyMs}</td><td>${esc((l.error || '').slice(0, 80))}</td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--dim)">no traffic yet — make your first request</td></tr>';
 }
 
 async function openDash() {
   if (!localStorage.getItem('orin_token')) { show('view-home'); return; }
   show('view-dash');
   try { await Promise.all([loadKeys(), loadProviders(), loadStats(), loadLogs()]); }
-  catch (e) { alert(e.message); show('view-home'); }
+  catch (e) { toast(e.message); show('view-home'); }
 }
 if (localStorage.getItem('orin_token')) openDash();
 </script>
