@@ -223,25 +223,32 @@ export interface ProviderInput {
   id: string;
   type: string;
   baseUrl?: string;
-  apiKey: string;
+  /** Required for new providers; optional when updating an existing one (keeps stored key). */
+  apiKey?: string;
   models?: string[];
   enabled?: boolean;
   timeoutMs?: number;
 }
 
-export async function addProvider(store: RouterStore, userUid: string, input: ProviderInput): Promise<{ id: string }> {
+export async function addProvider(store: RouterStore, userUid: string, input: ProviderInput): Promise<{ id: string; updated: boolean }> {
   const id = String(input.id || '');
   if (!/^[a-z0-9_-]{1,64}$/.test(id)) throw new OrinError('validation', 'Field "id" ([a-z0-9_-], ≤64) required.');
   if (!PROVIDER_TYPES.has(input.type)) throw new OrinError('validation', 'Field "type" must be openrouter|groq|custom.');
-  if (!input.apiKey || typeof input.apiKey !== 'string') throw new OrinError('validation', 'Field "apiKey" required.');
-  const cleanUrl = input.type === 'custom' ? validateBaseUrl(String(input.baseUrl || '')) : String(input.baseUrl || '');
+  const existing = (await store.getProviders(userUid)).find((p) => p.id === id);
+  const apiKey = input.apiKey || existing?.apiKey || '';
+  if (!apiKey || typeof apiKey !== 'string') {
+    throw new OrinError('validation', existing ? 'Field "apiKey" required (no stored key to keep).' : 'Field "apiKey" required.');
+  }
+  const cleanUrl = input.type === 'custom'
+    ? validateBaseUrl(String(input.baseUrl ?? existing?.baseUrl ?? ''))
+    : String(input.baseUrl ?? existing?.baseUrl ?? '');
   await store.saveProvider({
-    userUid, id, type: input.type as ProviderDef['type'], baseUrl: cleanUrl, apiKey: input.apiKey,
-    models: Array.isArray(input.models) ? input.models.map(String).slice(0, 200) : [],
-    enabled: input.enabled !== false,
-    timeoutMs: Number(input.timeoutMs) > 0 ? Number(input.timeoutMs) : undefined,
+    userUid, id, type: input.type as ProviderDef['type'], baseUrl: cleanUrl, apiKey,
+    models: Array.isArray(input.models) ? input.models.map(String).slice(0, 200) : (existing?.models ?? []),
+    enabled: input.enabled ?? existing?.enabled ?? true,
+    timeoutMs: Number(input.timeoutMs) > 0 ? Number(input.timeoutMs) : existing?.timeoutMs,
   });
-  return { id };
+  return { id, updated: !!existing };
 }
 
 export function publicProviders(providers: ProviderDef[]): Omit<ProviderDef, 'apiKey' | 'userUid'>[] {

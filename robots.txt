@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://router.orinai.org/sitemap.xml

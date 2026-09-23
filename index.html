@@ -3,278 +3,229 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Orin Router — Many APIs In, One API Out | Orin AI</title>
-<meta name="description" content="Orin Router: add your OpenRouter, Groq and OpenAI-compatible API keys, get ONE OpenAI-compatible endpoint with automatic failover. Many APIs in, one API out." />
+<title>Orin Router — Unified AI Model Routing API | Orin AI</title>
+<meta name="description" content="Orin Router routes AI requests across OpenRouter, Groq and OpenAI-compatible providers through a single OpenAI-compatible API. One endpoint, every model, automatic failover." />
 <link rel="canonical" href="https://router.orinai.org/" />
-<meta property="og:title" content="Orin Router — many APIs in, one API out" />
-<meta property="og:description" content="Bring your own keys. Get one endpoint. Automatic failover. By Orin AI." />
+<meta property="og:title" content="Orin Router — one endpoint, every model" />
+<meta property="og:description" content="Route AI requests across multiple providers through a single OpenAI-compatible API. Automatic failover, one key." />
 <meta property="og:url" content="https://router.orinai.org/" />
 <meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Orin Router — one endpoint, every model" />
+<meta name="twitter:description" content="Single OpenAI-compatible API over all your providers. Automatic failover." />
 <meta name="theme-color" content="#04060c" />
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2305070d'/%3E%3Cpath d='M6 16h6l3-7 4 14 3-7h4' stroke='%235eead4' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2304060c'/%3E%3Cpath d='M6 16h6l3-7 4 14 3-7h4' stroke='%239aa2ff' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Orin Router","applicationCategory":"DeveloperApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0"},"provider":{"@type":"Organization","name":"Orin AI","url":"https://orinai.org"}}
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
-<style>
-:root{
-  --bg0:#04060c;
-  --panel:rgba(148,184,255,.045); --panel2:rgba(148,184,255,.08);
-  --line:rgba(148,184,255,.14); --line2:rgba(148,184,255,.22);
-  --txt:#e9f1ff; --mut:#8f9cbd; --dim:#5c6884;
-  --acc:#5eead4; --acc-d:#04211c; --vio:#8b93ff;
-  --bad:#f87171; --ok:#34d399; --warn:#fbbf24;
-  --r:16px; --r-s:10px;
-  --font:'Inter',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
-  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
-}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg0);color:var(--txt);font-family:var(--font);-webkit-font-smoothing:antialiased}
-body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:radial-gradient(720px 380px at 12% -4%,rgba(94,234,212,.10),transparent 60%),
-             radial-gradient(820px 420px at 88% 6%,rgba(139,147,255,.12),transparent 60%),
-             radial-gradient(600px 500px at 50% 110%,rgba(94,234,212,.05),transparent 60%)}
-main,header,footer{position:relative;z-index:1}
-a{color:var(--acc);text-decoration:none}
-/* nav */
-.nav{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:13px 22px;
-  background:rgba(4,6,12,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
-.brand{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-weight:700;color:var(--acc);font-size:15px}
-.brand .dot{width:9px;height:9px;border-radius:50%;background:var(--acc);box-shadow:0 0 12px var(--acc);animation:pulse 2.4s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
-.nav .sp{flex:1}
-.nav-links{display:flex;gap:4px;align-items:center}
-.nav-links a{color:var(--mut);font-size:13.5px;font-weight:500;padding:7px 12px;border-radius:8px}
-.nav-links a:hover{color:var(--txt);background:var(--panel2)}
-.userchip{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mut);border:1px solid var(--line);border-radius:99px;padding:6px 13px;background:var(--panel)}
-.userchip b{color:var(--txt);font-weight:600}
-/* layout */
-main{max-width:1120px;margin:0 auto;padding:0 22px 70px}
-/* hero */
-.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center;padding:64px 0 30px}
-@media(max-width:900px){.hero{grid-template-columns:1fr;padding-top:44px}}
-.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--acc);
-  border:1px solid rgba(94,234,212,.3);background:rgba(94,234,212,.07);padding:6px 13px;border-radius:99px}
-.hero h1{font-size:clamp(34px,5.4vw,60px);line-height:1.04;margin:18px 0 16px;font-weight:800;letter-spacing:-.02em}
-.hero h1 .grad{background:linear-gradient(92deg,var(--acc),var(--vio));-webkit-background-clip:text;background-clip:text;color:transparent}
-.hero p.sub{color:var(--mut);font-size:16.5px;line-height:1.65;margin:0 0 26px;max-width:52ch}
-.hero p.sub b{color:var(--txt);font-weight:600}
-.hero p.sub code{font-family:var(--mono);font-size:.86em;background:var(--panel2);border:1px solid var(--line);padding:2px 7px;border-radius:7px;color:var(--acc)}
-.cta-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-.hero-meta{display:flex;gap:18px;margin-top:26px;flex-wrap:wrap}
-.hero-meta div{font-size:13px;color:var(--dim)}
-.hero-meta b{display:block;font-size:19px;color:var(--txt);font-weight:700}
-/* code window */
-.win{background:#070b14;border:1px solid var(--line2);border-radius:14px;overflow:hidden;box-shadow:0 30px 80px -20px rgba(0,0,0,.7),0 0 60px -30px rgba(94,234,212,.25)}
-.win-bar{display:flex;align-items:center;gap:7px;padding:11px 14px;border-bottom:1px solid var(--line);background:rgba(148,184,255,.04)}
-.win-bar i{width:11px;height:11px;border-radius:50%}
-.win-bar i:nth-child(1){background:#f87171}.win-bar i:nth-child(2){background:#fbbf24}.win-bar i:nth-child(3){background:#34d399}
-.win-bar span{margin-left:8px;font-family:var(--mono);font-size:12px;color:var(--dim)}
-.win-body{padding:16px 18px 20px;font-family:var(--mono);font-size:13px;line-height:1.8}
-.win-body .k{color:var(--vio)} .win-body .s{color:var(--acc)} .win-body .c{color:var(--dim)} .win-body .f{color:#fbbf24}
-/* cards / forms */
-.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:24px;margin:18px 0}
-.card h2{margin:0 0 6px;font-size:19px;font-weight:700;letter-spacing:-.01em}
-.card h2 .sub{font-weight:400;font-size:13px;color:var(--mut)}
-.card p.desc{color:var(--mut);font-size:14px;line-height:1.6;margin:0 0 14px}
-label{display:block;font-size:12.5px;font-weight:600;color:var(--mut);margin:12px 0 5px;letter-spacing:.02em}
-input,select{width:100%;background:rgba(2,5,11,.7);border:1px solid var(--line);color:var(--txt);border-radius:var(--r-s);
-  padding:11px 13px;margin:0;font-size:14px;font-family:var(--font);transition:border-color .15s,box-shadow .15s}
-input:focus,select:focus{outline:none;border-color:var(--acc);box-shadow:0 0 0 3px rgba(94,234,212,.14)}
-input::placeholder{color:var(--dim)}
-code{font-family:var(--mono);font-size:.86em;background:var(--panel2);border:1px solid var(--line);padding:2px 7px;border-radius:7px;color:var(--acc)}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
-.sp{flex:1}.mut{color:var(--mut)}
-.mono{font-family:var(--mono);font-size:13px;word-break:break-all}
-.hidden{display:none!important}
-/* buttons */
-.btn{background:linear-gradient(180deg,#6ff5e0,#4ed9c3);color:var(--acc-d);border:0;border-radius:11px;padding:11px 20px;font-weight:700;font-size:14px;cursor:pointer;
-  font-family:var(--font);transition:transform .12s,filter .12s;box-shadow:0 8px 24px -8px rgba(94,234,212,.45)}
-.btn:hover{filter:brightness(1.06);transform:translateY(-1px)}
-.btn:active{transform:translateY(0)}
-.btn.ghost{background:transparent;color:var(--acc);border:1px solid rgba(94,234,212,.4);box-shadow:none}
-.btn.ghost:hover{background:rgba(94,234,212,.08)}
-.btn.danger{background:transparent;color:var(--bad);border:1px solid rgba(248,113,113,.4);box-shadow:none}
-.btn.danger:hover{background:rgba(248,113,113,.08)}
-.btn.small{padding:7px 13px;font-size:13px;border-radius:9px}
-.btn[disabled]{opacity:.55;cursor:wait;transform:none}
-/* tabs */
-.tabs{display:inline-flex;background:rgba(2,5,11,.7);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
-.tabs button{border:0;background:transparent;color:var(--mut);font-family:var(--font);font-weight:600;font-size:13.5px;padding:8px 18px;border-radius:9px;cursor:pointer}
-.tabs button.on{background:var(--panel2);color:var(--txt);box-shadow:inset 0 0 0 1px var(--line2)}
-/* dashboard */
-.dash-head{display:flex;gap:12px;align-items:center;padding:26px 0 4px;flex-wrap:wrap}
-.dash-head h1{font-size:26px;margin:0;font-weight:800;letter-spacing:-.01em}
-.step{display:flex;gap:12px;align-items:flex-start;margin:2px 0 14px}
-.step .n{flex:none;width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;
-  background:rgba(94,234,212,.1);border:1px solid rgba(94,234,212,.35);color:var(--acc)}
-.step h3{margin:2px 0 4px;font-size:15.5px}
-.step p{margin:0;color:var(--mut);font-size:13.5px;line-height:1.6}
-.item{display:flex;gap:14px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:13px 16px;margin:10px 0;background:rgba(2,5,11,.45);transition:border-color .15s}
-.item:hover{border-color:var(--line2)}
-.item .sdot{width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 10px var(--ok);flex:none}
-.item .sdot.off{background:var(--dim);box-shadow:none}
-.item .grow{flex:1;min-width:0}
-.item .t1{font-family:var(--mono);font-size:13.5px;font-weight:500}
-.item .t2{font-size:12.5px;color:var(--dim);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.status{font-size:12px;font-weight:700;padding:4px 11px;border-radius:99px;white-space:nowrap}
-.status.on{color:var(--ok);background:rgba(52,211,153,.09);border:1px solid rgba(52,211,153,.3)}
-.status.off{color:var(--dim);background:rgba(92,104,132,.1);border:1px solid var(--line)}
-.status.err{color:var(--bad);background:rgba(248,113,113,.09);border:1px solid rgba(248,113,113,.3)}
-.keyonce{border:1px solid rgba(94,234,212,.35);background:rgba(94,234,212,.06);border-radius:12px;padding:14px 16px;margin:12px 0}
-.keyonce .k{font-family:var(--mono);font-size:13px;color:var(--acc);word-break:break-all;display:block;margin:8px 0}
-.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
-.stat .v{font-size:30px;font-weight:800;letter-spacing:-.02em}
-.stat .l{font-size:12.5px;color:var(--mut);margin-top:4px;text-transform:uppercase;letter-spacing:.07em;font-weight:600}
-.stat .v.ok{color:var(--ok)} .stat .v.bad{color:var(--bad)}
-/* table */
-.tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:rgba(2,5,11,.45)}
-table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
-th{text-align:left;padding:10px 14px;font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--dim);font-weight:700;border-bottom:1px solid var(--line);background:rgba(148,184,255,.03)}
-td{padding:10px 14px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:12.5px;color:var(--txt)}
-tr:last-child td{border-bottom:0}
-td.ok{color:var(--ok)} td.bad{color:var(--bad)}
-/* feature cards */
-.feat{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:22px;transition:transform .15s,border-color .15s}
-.feat:hover{transform:translateY(-3px);border-color:var(--line2)}
-.feat .ico{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:19px;margin-bottom:12px;
-  background:rgba(94,234,212,.09);border:1px solid rgba(94,234,212,.25)}
-.feat h3{margin:0 0 8px;font-size:15.5px}
-.feat p{margin:0;color:var(--mut);font-size:13.5px;line-height:1.6}
-/* footer / toast */
-footer{border-top:1px solid var(--line);padding:22px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:center;color:var(--dim);font-size:13px}
-#toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:#0b1220;border:1px solid var(--line2);
-  padding:11px 20px;border-radius:12px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:99;
-  box-shadow:0 16px 40px -10px rgba(0,0,0,.7);max-width:min(92vw,560px);font-family:var(--mono);font-size:12.5px}
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-details{margin-top:12px}summary{cursor:pointer;font-size:13px}
-.empty{border:1px dashed var(--line2);border-radius:12px;padding:26px;text-align:center;color:var(--dim);font-size:14px}
-.spin{display:inline-block;width:14px;height:14px;border:2px solid rgba(4,33,28,.3);border-top-color:var(--acc-d);border-radius:50%;animation:rot .7s linear infinite;vertical-align:-2px}
-@keyframes rot{to{transform:rotate(360deg)}}
-</style>
+<link rel="stylesheet" href="/ui/tokens.css" />
+<link rel="stylesheet" href="/ui/components.css" />
+<link rel="stylesheet" href="/ui/router.css" />
+<script src="/ui/orin.js" defer></script>
 </head>
 <body>
-<header class="nav">
-  <span class="brand"><span class="dot"></span>≋ orin router</span>
-  <span class="sp"></span>
-  <nav class="nav-links"><a href="https://orinai.org">Orin AI</a><a href="https://chat.orinai.org">Chat</a><a href="https://console.orinai.org">Console</a><a href="https://github.com/januththedev/orin-router-service">GitHub</a></nav>
-  <span class="userchip hidden" id="nav-user">👤 <b id="nav-who"></b></span>
+<a class="o-sr" href="#main">Skip to content</a>
+<header class="o-topbar">
+  <span class="o-brand"><span class="o-dot o-pulse" id="net-dot"></span>ORIN&nbsp;ROUTER</span>
+  <span class="o-sp"></span>
+  <span class="o-badge" id="net-status"><span class="o-dot o-dot--off"></span>&nbsp;no traffic yet</span>
+  <nav class="o-navlinks" aria-label="Ecosystem"><a href="https://orinai.org">Orin AI</a><a href="https://chat.orinai.org">Chat</a><a href="https://console.orinai.org">Console</a><a href="https://tools.orinai.org">Tools</a></nav>
+  <span class="o-userchip o-hidden" id="nav-user">👤&nbsp;<b id="nav-who"></b></span>
 </header>
-<main>
-<section id="view-home">
+
+<main id="main">
+<!-- ================= LANDING ================= -->
+<section id="view-home" aria-label="Orin Router overview">
   <div class="hero">
-    <div>
-      <span class="eyebrow">● live · automatic failover</span>
-      <h1>Many APIs in.<br /><span class="grad">One API out.</span></h1>
-      <p class="sub">Add your <b>OpenRouter</b>, <b>Groq</b> and <b>OpenAI-compatible</b> keys. Get <b>one endpoint</b> + <b>one key</b> that fans out across all of them. Any OpenAI SDK works unchanged.</p>
-      <div class="cta-row"><button class="btn" id="btn-start">Open dashboard →</button></div>
-      <div class="hero-meta">
-        <div><b>1</b>endpoint + key</div>
-        <div><b>∞</b>providers per user</div>
-        <div><b>0</b>config files</div>
+    <canvas id="net-canvas" aria-hidden="true"></canvas>
+    <div class="hero-inner">
+      <div>
+        <span class="eyebrow"><span class="o-dot o-pulse"></span>&nbsp;ORIN ROUTER</span>
+        <h1>One endpoint. Every model.<span class="thin">Route AI requests across multiple providers through a single OpenAI-compatible API.</span></h1>
+        <p class="lede">Bring your <b>OpenRouter</b>, <b>Groq</b> and <b>OpenAI-compatible</b> keys. Get <b>one key</b> that fails over automatically when a provider dies.</p>
+        <div class="cta-row">
+          <button class="o-btn" id="btn-create-key">Create API Key</button>
+          <button class="o-btn o-btn--ghost" id="btn-explore">Explore Models</button>
+        </div>
+        <div class="hero-proof" aria-label="Facts">
+          <div><b>1</b>OpenAI-compatible API</div>
+          <div><b>auto</b>failover + retry</div>
+          <div><b>0</b>vendor lock-in</div>
+        </div>
       </div>
-    </div>
-    <div class="win" aria-hidden="true">
-      <div class="win-bar"><i></i><i></i><i></i><span>your_app.py</span></div>
-      <div class="win-body"><span class="k">from</span> openai <span class="k">import</span> OpenAI<br />client = OpenAI(<br />&nbsp;&nbsp;base_url=<span class="s">"https://router.orinai.org/v1"</span>,<br />&nbsp;&nbsp;api_key=<span class="s">"orin_…"</span> <span class="c"># one key</span><br />)<br />client.chat.completions.create(<br />&nbsp;&nbsp;model=<span class="s">"x-ai/grok-4-1-fast"</span>,<br />&nbsp;&nbsp;messages=[{<span class="s">"role"</span>: <span class="s">"user"</span>,<br />&nbsp;&nbsp;&nbsp;&nbsp;<span class="s">"content"</span>: <span class="s">"Hello"</span>}]<br />) <span class="f"># → or1 ✓ (or2 on failure)</span></div>
+      <div class="endpoint" aria-hidden="true">
+        <div class="endpoint-bar"><i></i><i></i><i></i><span>your_app.py</span></div>
+        <div class="endpoint-body"><span class="k">from</span> openai <span class="k">import</span> OpenAI<br />client = OpenAI(<br />&nbsp;&nbsp;base_url=<span class="s">"https://router.orinai.org/v1"</span>,<br />&nbsp;&nbsp;api_key=<span class="s">"orin_…"</span> <span class="c"># one key</span><br />)<br />client.chat.completions.create(<br />&nbsp;&nbsp;model=<span class="s">"x-ai/grok-4-1-fast"</span>,<br />&nbsp;&nbsp;messages=[{<span class="s">"role"</span>: <span class="s">"user"</span>,<br />&nbsp;&nbsp;&nbsp;&nbsp;<span class="s">"content"</span>: <span class="s">"Hello"</span>}]<br />) <span class="f"># → or1 ✓ · or2 on failure</span></div>
+      </div>
     </div>
   </div>
 
-  <div class="card" id="connect-card"><h2>Sign in <span class="sub">· same account as Orin Chat</span></h2>
-    <p class="desc">Your providers and keys belong to your Orin account. Provider keys are encrypted server-side and never shown again.</p>
-    <div class="row" style="margin-bottom:4px">
-      <div class="tabs"><button id="tab-login" class="on">Sign in</button><button id="tab-register">Create account</button></div>
-      <span class="sp"></span><span class="mut" id="who"></span>
+  <div class="section" id="how">
+    <div class="section-head"><h2>Infrastructure, not another API key</h2><p>Your keys stay yours — encrypted at rest, never logged. The router only decides where each request goes.</p></div>
+    <div class="steps">
+      <div class="o-card step"><span class="n">01</span><h3>Add your providers</h3><p>Paste keys from OpenRouter, Groq or any OpenAI-compatible endpoint. Declare which models each one serves.</p></div>
+      <div class="o-card step"><span class="n">02</span><h3>Mint one gateway key</h3><p>A single <span class="o-code">orin_…</span> key fronts every provider. Rotate or revoke it without touching provider keys.</p></div>
+      <div class="o-card step"><span class="n">03</span><h3>Requests route themselves</h3><p>Exact model match first, wildcards after, in your order. 429s, 5xxs and dead keys fail over mid-request.</p></div>
     </div>
-    <div id="pane-login">
-      <label>Email or phone</label><input id="li-id" placeholder="you@example.com" autocomplete="username" />
-      <label>Password</label><input id="li-pw" type="password" autocomplete="current-password" />
-      <div class="row" style="margin-top:14px"><button class="btn" id="btn-login">Sign in</button><span class="mut" id="li-msg"></span></div>
-    </div>
-    <div id="pane-register" class="hidden">
-      <div class="grid" style="grid-template-columns:1fr 1fr">
-        <div><label>Name</label><input id="rg-name" placeholder="Your name" autocomplete="name" /></div>
-        <div><label>Phone</label><input id="rg-phone" placeholder="+9477…" autocomplete="tel" /></div>
-      </div>
-      <label>Email</label><input id="rg-email" placeholder="you@example.com" autocomplete="email" />
-      <div class="grid" style="grid-template-columns:1fr 1fr">
-        <div><label>Password</label><input id="rg-pw" type="password" autocomplete="new-password" /></div>
-        <div><label>Confirm password</label><input id="rg-pw2" type="password" autocomplete="new-password" /></div>
-      </div>
-      <div class="row" style="margin-top:14px"><button class="btn" id="btn-register">Create account</button><span class="mut" id="rg-msg"></span></div>
-    </div>
-    <details><summary class="mut">Advanced: use a token instead</summary>
-      <label>Orin session or MCP credential</label><input id="token" type="password" placeholder="orin session or orin_mcp_…" autocomplete="off" />
-      <div class="row" style="margin-top:12px"><button class="btn ghost small" id="btn-save">Save token</button><button class="btn ghost small" id="btn-clear">Forget</button></div>
-    </details>
   </div>
 
-  <div class="grid" style="margin-top:6px">
-    <div class="feat"><div class="ico">🔌</div><h3>1 · Add APIs</h3><p>Paste keys from any provider. List the models each one serves — or leave blank for “any model”.</p></div>
-    <div class="feat"><div class="ico">🔑</div><h3>2 · Get 1 API</h3><p>Mint one <code>orin_…</code> key. Point any OpenAI client at <code>/v1</code>. Done.</p></div>
-    <div class="feat"><div class="ico">🛡</div><h3>3 · Survives outages</h3><p>429 / 5xx / timeout / dead key → next provider, same request. Health is observed, never guessed.</p></div>
+  <div class="section" id="access">
+    <div class="o-panel" id="connect-card">
+      <h2>Sign in <span class="o-sub">· same account as Orin Chat</span></h2>
+      <p class="o-desc">Your providers, keys and logs belong to your Orin account.</p>
+      <div class="o-row" style="margin-bottom:4px">
+        <div class="o-tabs" id="auth-tabs" role="tablist" aria-label="Sign in or create account">
+          <button data-tab="login" aria-selected="true" id="tab-login" role="tab">Sign in</button>
+          <button data-tab="register" aria-selected="false" id="tab-register" role="tab">Create account</button>
+        </div>
+        <span class="o-sp"></span><span class="o-mut" id="who" role="status"></span>
+      </div>
+      <div id="pane-login" data-pane="login" role="tabpanel">
+        <div class="o-field"><label for="li-id">Email or phone</label><input class="o-input" id="li-id" placeholder="you@example.com" autocomplete="username" /></div>
+        <div class="o-field"><label for="li-pw">Password</label><input class="o-input" id="li-pw" type="password" autocomplete="current-password" /></div>
+        <div class="o-row" style="margin-top:14px"><button class="o-btn" id="btn-login">Sign in</button><button class="o-btn o-btn--ghost" id="btn-logout">Sign out</button><span class="o-mut" id="li-msg" role="alert"></span></div>
+      </div>
+      <div id="pane-register" data-pane="register" role="tabpanel" class="o-hidden">
+        <div class="o-grid" style="grid-template-columns:1fr 1fr">
+          <div class="o-field"><label for="rg-name">Name</label><input class="o-input" id="rg-name" placeholder="Your name" autocomplete="name" /></div>
+          <div class="o-field"><label for="rg-phone">Phone</label><input class="o-input" id="rg-phone" placeholder="+9477…" autocomplete="tel" /></div>
+        </div>
+        <div class="o-field"><label for="rg-email">Email</label><input class="o-input" id="rg-email" placeholder="you@example.com" autocomplete="email" /></div>
+        <div class="o-grid" style="grid-template-columns:1fr 1fr">
+          <div class="o-field"><label for="rg-pw">Password</label><input class="o-input" id="rg-pw" type="password" autocomplete="new-password" /></div>
+          <div class="o-field"><label for="rg-pw2">Confirm password</label><input class="o-input" id="rg-pw2" type="password" autocomplete="new-password" /></div>
+        </div>
+        <div class="o-row" style="margin-top:14px"><button class="o-btn" id="btn-register">Create account</button><span class="o-mut" id="rg-msg" role="alert"></span></div>
+      </div>
+      <details><summary class="o-mut">Advanced: use a token instead</summary>
+        <div class="o-field"><label for="token">Orin session or MCP credential</label><input class="o-input" id="token" type="password" placeholder="orin session or orin_mcp_…" autocomplete="off" /></div>
+        <div class="o-row" style="margin-top:12px"><button class="o-btn o-btn--ghost o-btn--sm" id="btn-save">Save token</button><button class="o-btn o-btn--ghost o-btn--sm" id="btn-clear">Forget</button></div>
+      </details>
+    </div>
   </div>
 </section>
 
-<section id="view-dash" class="hidden">
+<!-- ================= DASHBOARD ================= -->
+<section id="view-dash" class="o-hidden" aria-label="Router control plane">
   <div class="dash-head">
-    <button class="btn ghost small" id="btn-back">← Home</button>
-    <h1>Dashboard</h1>
-    <span class="sp"></span>
-    <button class="btn danger small" id="btn-forget">Sign out</button>
+    <h1>Control plane</h1>
+    <span class="o-badge" id="dash-status"><span class="o-dot o-dot--off"></span>&nbsp;loading…</span>
+    <span class="o-sp"></span>
+    <button class="o-btn o-btn--danger o-btn--sm" id="btn-forget">Sign out</button>
+  </div>
+  <div class="dashtabs" role="tablist" aria-label="Dashboard sections" id="dash-tabs">
+    <button data-tab="overview" aria-selected="true" role="tab">Overview</button>
+    <button data-tab="providers" aria-selected="false" role="tab">Providers</button>
+    <button data-tab="models" aria-selected="false" role="tab">Models</button>
+    <button data-tab="routing" aria-selected="false" role="tab">Routing</button>
+    <button data-tab="keys" aria-selected="false" role="tab">API Keys</button>
+    <button data-tab="playground" aria-selected="false" role="tab">Playground</button>
+    <button data-tab="logs" aria-selected="false" role="tab">Logs</button>
   </div>
 
-  <div class="card"><h2>🔑 Your gateway key</h2>
-    <p class="desc">One endpoint, one key — every provider you add sits behind it:</p>
-    <div class="win" style="box-shadow:none;margin-bottom:14px"><div class="win-body" style="min-height:0;padding:13px 16px">base_url = <span class="s">"https://router.orinai.org/v1"</span><br />api_key&nbsp;&nbsp;= <span class="s">"orin_…"</span></div></div>
-    <div class="row"><button class="btn" id="btn-mint">＋ Mint new key</button><input id="key-name" placeholder="key name (e.g. Production)" style="max-width:250px" /></div>
-    <div id="key-once"></div>
-    <div id="keys" style="margin-top:6px"></div>
+  <div class="pane" data-pane="overview" role="tabpanel">
+    <div class="o-grid" id="stats" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))"></div>
+    <div class="o-panel"><h2>Request latency <span class="o-sub">· last 40 requests, red = error</span></h2><svg class="spark" id="spark" role="img" aria-label="Latency chart"></svg></div>
+    <div class="o-panel"><h2>Provider health <span class="o-sub">· observed outcomes only</span></h2><div id="health"></div></div>
   </div>
 
-  <div class="card"><h2>🔌 Your APIs</h2>
-    <p class="desc">Add as many as you like. Requests try them in order — first success wins.</p>
-    <div class="step"><span class="n">1</span><div style="flex:1;min-width:240px">
-      <div class="grid" style="grid-template-columns:1fr 1fr">
-        <div><label>ID (a-z0-9_-)</label><input id="p-id" placeholder="or1" /></div>
-        <div><label>Type</label><select id="p-type"><option value="openrouter">OpenRouter</option><option value="groq">Groq</option><option value="custom">Custom (OpenAI-compatible)</option></select></div>
+  <div class="pane o-hidden" data-pane="providers" role="tabpanel">
+    <div class="o-panel"><h2>Add a provider</h2>
+      <p class="o-desc">Keys are encrypted server-side and never shown again. Blank models = serves any model.</p>
+      <div class="o-grid" style="grid-template-columns:1fr 1fr">
+        <div class="o-field"><label for="p-id">ID (a-z0-9_-)</label><input class="o-input" id="p-id" placeholder="or1" /></div>
+        <div class="o-field"><label for="p-type">Type</label><select class="o-select" id="p-type"><option value="openrouter">OpenRouter</option><option value="groq">Groq</option><option value="custom">Custom (OpenAI-compatible)</option></select></div>
       </div>
-      <div id="p-url-wrap" class="hidden"><label>Base URL (custom only)</label><input id="p-url" placeholder="https://api.example.com/v1" /></div>
-    </div></div>
-    <div class="step"><span class="n">2</span><div style="flex:1;min-width:240px">
-      <label style="margin-top:0">API key <span class="mut" style="font-weight:400">· stored encrypted, never shown again</span></label><input id="p-key" type="password" placeholder="sk-or-… / gsk_…" autocomplete="off" />
-      <label>Models, comma separated <span class="mut" style="font-weight:400">· blank = serves any model</span></label><input id="p-models" placeholder="x-ai/grok-4-1-fast, llama-3.3-70b-versatile" />
-    </div></div>
-    <div class="row"><button class="btn" id="btn-add">Save provider</button><span class="mut" id="p-msg"></span></div>
-    <div id="providers" style="margin-top:10px"></div>
+      <div id="p-url-wrap" class="o-hidden"><div class="o-field"><label for="p-url">Base URL (custom only)</label><input class="o-input" id="p-url" placeholder="https://api.example.com/v1" /></div></div>
+      <div class="o-field"><label for="p-key">API key</label><input class="o-input" id="p-key" type="password" placeholder="sk-or-… / gsk_…" autocomplete="off" /></div>
+      <div class="o-field"><label for="p-models">Models, comma separated</label><input class="o-input" id="p-models" placeholder="x-ai/grok-4-1-fast, llama-3.3-70b-versatile" /></div>
+      <div class="o-row" style="margin-top:14px"><button class="o-btn" id="btn-add">Save provider</button><span class="o-mut" id="p-msg" role="status"></span></div>
+    </div>
+    <div class="o-panel"><h2>Providers <span class="o-sub">· priority = order added</span></h2><div id="providers"></div></div>
   </div>
 
-  <div class="card"><h2>📊 Usage</h2><div class="grid" id="stats" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))"></div></div>
+  <div class="pane o-hidden" data-pane="models" role="tabpanel">
+    <div class="o-panel"><h2>Model explorer <span class="o-sub">· your configured models, live stats</span></h2>
+      <div class="o-grid" style="grid-template-columns:2fr 1fr 1fr">
+        <div class="o-field"><label for="m-search">Search</label><input class="o-input" id="m-search" placeholder="grok, llama, 70b…" /></div>
+        <div class="o-field"><label for="m-prov">Provider</label><select class="o-select" id="m-prov"><option value="">All providers</option></select></div>
+        <div class="o-field"><label for="m-avail">Availability</label><select class="o-select" id="m-avail"><option value="">All</option><option value="live">Live</option><option value="off">Disabled</option></select></div>
+      </div>
+      <div style="margin-top:14px" id="models"></div>
+    </div>
+  </div>
 
-  <div class="card"><h2>🧾 Recent requests</h2><div class="tblwrap"><table><thead><tr><th>time</th><th>requested</th><th>provider</th><th>status</th><th>ms</th><th>error</th></tr></thead><tbody id="logs"></tbody></table></div></div>
+  <div class="pane o-hidden" data-pane="routing" role="tabpanel">
+    <div class="o-panel"><h2>Routing graph <span class="o-sub">· how a request flows</span></h2>
+      <p class="o-desc">Pick a model. Requests try providers top-down; dashed edges are failover paths. Priority follows the order providers were added.</p>
+      <div class="o-field" style="max-width:340px"><label for="r-model">Model</label><select class="o-select" id="r-model"></select></div>
+      <div style="margin-top:14px"><svg class="graph" id="graph" viewBox="0 0 560 120" role="img" aria-label="Routing graph"></svg></div>
+      <div id="route-cards" style="margin-top:14px"></div>
+    </div>
+  </div>
+
+  <div class="pane o-hidden" data-pane="keys" role="tabpanel">
+    <div class="o-panel"><h2>API keys <span class="o-sub">· one key fronts all your providers</span></h2>
+      <div class="o-grid" style="grid-template-columns:2fr 1fr auto;align-items:end">
+        <div class="o-field"><label for="key-name">Name</label><input class="o-input" id="key-name" placeholder="Production" /></div>
+        <div class="o-field"><label for="key-rpm">Per-minute limit (0 = ∞)</label><input class="o-input" id="key-rpm" type="number" min="0" value="0" /></div>
+        <div><button class="o-btn" id="btn-mint">＋ Create API key</button></div>
+      </div>
+      <div id="key-once"></div>
+      <div id="keys" style="margin-top:10px"></div>
+    </div>
+  </div>
+
+  <div class="pane o-hidden" data-pane="playground" role="tabpanel">
+    <div class="o-panel"><h2>Playground <span class="o-sub">· serious requests, real keys</span></h2>
+      <div class="o-grid" style="grid-template-columns:1fr 1fr">
+        <div class="o-field"><label for="pg-key">Gateway key</label><select class="o-select" id="pg-key"></select></div>
+        <div class="o-field"><label for="pg-secret">Key secret <span class="o-mut" style="font-weight:400">· pasted, kept in memory only</span></label><input class="o-input" id="pg-secret" type="password" placeholder="orin_… (shown once at mint)" autocomplete="off" /></div>
+      </div>
+      <div class="o-field"><label for="pg-model">Model</label><select class="o-select" id="pg-model" style="max-width:420px"></select></div>
+      <div class="o-field"><label for="pg-system">System prompt (optional)</label><input class="o-input" id="pg-system" placeholder="You are a concise assistant." /></div>
+      <div class="o-grid" style="grid-template-columns:1fr 1fr 1fr auto;align-items:end">
+        <div class="o-field"><label for="pg-temp">Temperature</label><input class="o-input" id="pg-temp" type="number" step="0.1" min="0" max="2" value="0.7" /></div>
+        <div class="o-field"><label for="pg-max">Max tokens</label><input class="o-input" id="pg-max" type="number" min="1" max="32000" value="512" /></div>
+        <div class="o-field"><label for="pg-user">User message</label><input class="o-input" id="pg-user" value="Say hello in one sentence." /></div>
+        <div><label class="o-switch"><input type="checkbox" id="pg-stream" checked /><span class="tr"></span>Stream</label></div>
+      </div>
+      <div class="o-row" style="margin-top:14px"><button class="o-btn" id="pg-send">▶ Run request</button><span class="o-mut" id="pg-meta"></span></div>
+      <div class="pg-grid" style="margin-top:14px">
+        <div><div class="o-mut" style="font-size:12px;font-weight:700;margin-bottom:6px">REQUEST</div><div class="o-codeblock" id="pg-req">—</div></div>
+        <div><div class="o-mut" style="font-size:12px;font-weight:700;margin-bottom:6px">RESPONSE</div><div class="o-codeblock resp" id="pg-resp">—</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pane o-hidden" data-pane="logs" role="tabpanel">
+    <div class="o-panel"><h2>Request logs <span class="o-sub">· click a row to inspect — prompt text is never stored</span></h2>
+      <div class="o-tblwrap"><table class="o-table"><thead><tr><th>time</th><th>requested</th><th>provider</th><th>status</th><th>ms</th><th>error</th></tr></thead><tbody id="logs"></tbody></table></div>
+    </div>
+  </div>
 </section>
 </main>
-<footer><span>© 2026 Orin AI · Januth Nimnal</span><a href="https://orinai.org">orinai.org</a><a href="https://chat.orinai.org">Chat</a><a href="https://tools.orinai.org">Tools</a><a href="https://console.orinai.org">Console</a></footer>
-<div id="toast"></div>
+
+<footer>
+  <span>© 2026 Orin AI · Januth Nimnal</span>
+  <a href="https://orinai.org">orinai.org</a><a href="https://chat.orinai.org">Chat</a><a href="https://tools.orinai.org">Tools</a><a href="https://console.orinai.org">Console</a>
+</footer>
+
+<!-- log detail modal -->
+<div class="o-modalback" id="log-modal" role="dialog" aria-modal="true" aria-labelledby="log-title">
+  <div class="o-modal">
+    <h2 id="log-title">Request inspection</h2>
+    <p class="o-mut" style="font-size:13.5px;margin:6px 0 4px">Metadata only — prompt and completion text are never stored.</p>
+    <dl class="kv" id="log-detail"></dl>
+    <div class="o-actions"><button class="o-btn o-btn--ghost" id="log-close">Close</button></div>
+  </div>
+</div>
+
 <script>
-const $ = (id) => document.getElementById(id);
-let toastTimer = null;
-function toast(msg) {
-  const el = $('toast'); el.textContent = msg; el.classList.add('show');
-  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
-}
-async function copyText(s) {
-  try { await navigator.clipboard.writeText(s); return true; }
-  catch {
-    const ta = document.createElement('textarea'); ta.value = s; document.body.appendChild(ta);
-    ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch {}
-    ta.remove(); return ok;
-  }
-}
+const { $, toast, copyText, modal, tabs, busy } = window.OrinUI;
 const auth = () => ({ 'Content-Type': 'application/json', Authorization: 'Bearer ' + (localStorage.getItem('orin_token') || '') });
 const api = async (path, opts = {}) => {
   const r = await fetch(path, { ...opts, headers: { ...auth(), ...(opts.headers || {}) } });
@@ -283,9 +234,78 @@ const api = async (path, opts = {}) => {
   return j;
 };
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const show = (id) => { for (const v of ['view-home', 'view-dash']) $(v).classList.add('hidden'); $(id).classList.remove('hidden'); };
+const show = (id) => { for (const v of ['view-home', 'view-dash']) $(v).classList.add('o-hidden'); $(id).classList.remove('o-hidden'); window.scrollTo(0, 0); };
+const median = (a) => { if (!a.length) return 0; const s = [...a].sort((x, y) => x - y); return Math.round(s[Math.floor(s.length / 2)]); };
 
-$('btn-start').onclick = () => { $('connect-card').scrollIntoView({ behavior: 'smooth' }); };
+/* ---------- hero network canvas ---------- */
+(function net() {
+  const cv = $('net-canvas');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce || !cv.getContext || innerWidth < 640) { cv.remove(); return; }
+  let started = false;
+  function start() {
+    if (started) return; started = true;
+    const ctx = cv.getContext('2d');
+    const parent = cv.parentElement.getBoundingClientRect();
+    const dpr = Math.min(devicePixelRatio || 1, 1.5);
+    cv.width = parent.width * dpr; cv.height = parent.height * dpr;
+    const W = parent.width, H = parent.height;
+    const cx = W * .5, cy = H * .52;
+    const R = Math.min(W, H) * .3;
+    const sats = Array.from({ length: 5 }, (_, i) => {
+      const a = (i / 5) * Math.PI * 2 - Math.PI / 2;
+      return { x: cx + Math.cos(a) * R * 1.5, y: cy + Math.sin(a) * R * .9, ph: Math.random() * 7 };
+    });
+    const pkts = Array.from({ length: 14 }, (_, i) => ({ s: i % 5, t: Math.random(), v: .004 + Math.random() * .008 }));
+    let raf = 0, visible = true, t = 0;
+    const draw = () => {
+      raf = requestAnimationFrame(draw);
+      if (!visible || document.hidden) return;
+      t += .008;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, W, H);
+      ctx.lineWidth = 1;
+      sats.forEach((s, i) => {
+        const g = ctx.createLinearGradient(cx, cy, s.x, s.y);
+        g.addColorStop(0, 'rgba(154,162,255,.5)'); g.addColorStop(1, 'rgba(154,162,255,.08)');
+        ctx.strokeStyle = g; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(s.x, s.y); ctx.stroke();
+        const pulse = .6 + .4 * Math.sin(t * 3 + s.ph);
+        ctx.beginPath(); ctx.arc(s.x, s.y, 4, 0, 7);
+        ctx.fillStyle = `rgba(94,234,212,${.35 * pulse})`; ctx.fill();
+        ctx.beginPath(); ctx.arc(s.x, s.y, 2, 0, 7);
+        ctx.fillStyle = `rgba(233,241,255,${.5 * pulse + .3})`; ctx.fill();
+        void i;
+      });
+      ctx.beginPath(); ctx.arc(cx, cy, 7, 0, 7);
+      ctx.fillStyle = 'rgba(154,162,255,.25)'; ctx.fill();
+      ctx.beginPath(); ctx.arc(cx, cy, 3.5, 0, 7);
+      ctx.fillStyle = '#9aa2ff'; ctx.fill();
+      for (const p of pkts) {
+        p.t += p.v; if (p.t > 1) { p.t = 0; p.s = (p.s + 1) % 5; }
+        const s = sats[p.s];
+        const x = cx + (s.x - cx) * p.t, y = cy + (s.y - cy) * p.t;
+        ctx.beginPath(); ctx.arc(x, y, 1.8, 0, 7);
+        ctx.fillStyle = 'rgba(94,234,212,.9)'; ctx.fill();
+      }
+    };
+    draw();
+    new IntersectionObserver((es) => { visible = es[0].isIntersecting; }).observe(cv);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) cancelAnimationFrame(raf); else draw(); });
+    addEventListener('beforeunload', () => cancelAnimationFrame(raf));
+  }
+  if ('IntersectionObserver' in window) new IntersectionObserver((es, o) => { if (es[0].isIntersecting) { start(); o.disconnect(); } }).observe($('view-home'));
+  else start();
+})();
+
+/* ---------- auth ---------- */
+$('btn-create-key').onclick = () => {
+  if (localStorage.getItem('orin_token')) openDash('keys');
+  else { $('connect-card').scrollIntoView({ behavior: 'smooth', block: 'center' }); toast('Sign in first — same account as Orin Chat'); }
+};
+$('btn-explore').onclick = () => {
+  if (localStorage.getItem('orin_token')) openDash('models');
+  else { $('connect-card').scrollIntoView({ behavior: 'smooth', block: 'center' }); toast('Sign in to explore your models'); }
+};
 const CORE = 'https://orinai.org';
 async function coreLogin(action, body) {
   const r = await fetch(CORE + '/api/auth/password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, ...body }) });
@@ -303,64 +323,89 @@ function paintWho() {
   const label = u ? `${u.email || u.name || 'you'}` : '';
   const w = $('who'); if (w) w.textContent = label ? `signed in as ${label}` : '';
   const chip = $('nav-user'), nw = $('nav-who');
-  if (chip && nw) { if (label) { nw.textContent = label; chip.classList.remove('hidden'); } else chip.classList.add('hidden'); }
+  if (chip && nw) { if (label) { nw.textContent = label; chip.classList.remove('o-hidden'); } else chip.classList.add('o-hidden'); }
 }
-function setTab(which) {
-  const login = which === 'login';
-  $('tab-login').classList.toggle('on', login);
-  $('tab-register').classList.toggle('on', !login);
-  $('pane-login').classList.toggle('hidden', !login);
-  $('pane-register').classList.toggle('hidden', login);
-}
-$('tab-login').onclick = () => setTab('login');
-$('tab-register').onclick = () => setTab('register');
-async function busy(btn, fn) {
-  const old = btn.innerHTML; btn.disabled = true; btn.innerHTML = '<span class="spin"></span>';
-  try { await fn(); } finally { btn.disabled = false; btn.innerHTML = old; }
-}
+tabs('auth-tabs');
+tabs('dash-tabs', (name) => { if (name === 'overview') loadOverview(); if (name === 'logs') loadLogs(); });
 $('btn-login').onclick = () => busy($('btn-login'), async () => {
   try {
     await coreLogin('login', { identifier: $('li-id').value.trim(), password: $('li-pw').value });
     $('li-msg').textContent = ''; $('li-pw').value = '';
-    toast('Signed in ✓');
-    openDash();
+    toast('Signed in ✓'); openDash('overview');
   } catch (e) { $('li-msg').textContent = e.message; }
 });
 $('btn-register').onclick = () => busy($('btn-register'), async () => {
   try {
     await coreLogin('register', { name: $('rg-name').value.trim(), email: $('rg-email').value.trim(), phone: $('rg-phone').value.trim(), password: $('rg-pw').value, confirmPassword: $('rg-pw2').value });
     $('rg-msg').textContent = ''; $('rg-pw').value = ''; $('rg-pw2').value = '';
-    toast('Account created ✓');
-    openDash();
+    toast('Account created ✓'); openDash('overview');
   } catch (e) { $('rg-msg').textContent = e.message; }
 });
-$('btn-save').onclick = () => { localStorage.setItem('orin_token', $('token').value.trim()); localStorage.removeItem('orin_user'); paintWho(); openDash(); };
+$('btn-save').onclick = () => { localStorage.setItem('orin_token', $('token').value.trim()); localStorage.removeItem('orin_user'); paintWho(); openDash('overview'); };
 $('btn-clear').onclick = () => { signOut(); $('token').value = ''; };
+$('btn-logout').onclick = () => signOut();
 $('btn-forget').onclick = () => { signOut(); show('view-home'); toast('Signed out'); };
 paintWho();
-$('p-type').onchange = () => $('p-url-wrap').classList.toggle('hidden', $('p-type').value !== 'custom');
 
-$('btn-mint').onclick = () => busy($('btn-mint'), async () => {
-  try {
-    const name = $('key-name').value.trim() || 'default';
-    const { key, prefix } = await api('/api/keys', { method: 'POST', body: JSON.stringify({ name }) });
-    await copyText(key);
-    $('key-once').innerHTML = '';
-    const box = document.createElement('div'); box.className = 'keyonce';
-    box.innerHTML = `<b>🔑 New gateway key — copy it now, it will never be shown again</b><span class="k"></span><div class="row"></div>`;
-    box.querySelector('.k').textContent = key;
-    const b = document.createElement('button'); b.className = 'btn small'; b.textContent = '⧉ Copy again';
-    b.onclick = async () => { await copyText(key); toast('Key copied ✓'); };
-    const x = document.createElement('button'); x.className = 'btn ghost small'; x.textContent = 'Hide';
-    x.onclick = () => box.remove();
-    box.querySelector('.row').append(b, x);
-    $('key-once').appendChild(box);
-    $('key-name').value = '';
-    toast(`Key ${prefix}… minted + copied ✓`);
-    loadKeys();
-  } catch (e) { toast(e.message); }
-});
+/* ---------- cached state ---------- */
+let providers = [], keys = [], stats = null, logs = [];
+async function refreshAll() {
+  const [p, k, s, l] = await Promise.all([api('/api/providers'), api('/api/keys'), api('/api/stats'), api('/api/logs?limit=100')]);
+  providers = p.providers; keys = k.keys; stats = s; logs = l.logs;
+  paintNetStatus();
+}
+function paintNetStatus() {
+  const el = $('net-status'), d = $('dash-status');
+  const recent = logs.slice(0, 30);
+  let html;
+  if (!recent.length) html = '<span class="o-dot o-dot--off"></span>&nbsp;no traffic yet';
+  else {
+    const err = recent.filter((l) => l.status !== 'ok').length / recent.length;
+    html = err < .05 ? '<span class="o-dot"></span>&nbsp;operational'
+      : err < .25 ? '<span class="o-dot o-dot--warn"></span>&nbsp;degraded'
+      : '<span class="o-dot o-dot--bad"></span>&nbsp;outage';
+  }
+  el.innerHTML = html; d.innerHTML = html;
+  $('net-dot').className = 'o-dot o-pulse' + (!recent.length ? ' o-dot--off' : '');
+}
 
+/* ---------- overview ---------- */
+async function loadOverview() {
+  const total = stats?.total ?? 0, ok = stats?.ok ?? 0;
+  const okRate = total ? (100 * ok / total) : 100;
+  const models = new Set(providers.flatMap((p) => p.models || [])).size;
+  $('stats').innerHTML =
+    `<div class="o-metric"><div class="v">${total >= 1000 ? (total / 1000).toFixed(1) + 'K' : total}</div><div class="l">requests</div></div>` +
+    `<div class="o-metric"><div class="v ${okRate >= 95 ? 'o-ok' : 'o-bad'}">${total ? okRate.toFixed(1) + '%' : '—'}</div><div class="l">success</div></div>` +
+    `<div class="o-metric"><div class="v">${stats ? stats.avgLatencyMs + '<span style="font-size:15px">ms</span>' : '—'}</div><div class="l">avg latency</div></div>` +
+    `<div class="o-metric"><div class="v">${models}</div><div class="l">active models</div></div>` +
+    `<div class="o-metric"><div class="v">${providers.filter((p) => p.enabled).length}</div><div class="l">providers on</div></div>`;
+  // sparkline: last 40 latencies
+  const last = logs.slice(0, 40).reverse();
+  const max = Math.max(1, ...last.map((l) => l.latencyMs));
+  $('spark').setAttribute('viewBox', `0 0 ${Math.max(last.length, 1) * 12} 64`);
+  $('spark').innerHTML = last.map((l, i) => {
+    const h = Math.max(3, Math.round((l.latencyMs / max) * 60));
+    return `<rect x="${i * 12}" y="${64 - h}" width="8" height="${h}" rx="2" class="${l.status === 'ok' ? '' : 'err'}"><title>${esc(l.requested)} · ${l.latencyMs}ms · ${esc(l.status)}</title></rect>`;
+  }).join('') || '<text x="8" y="32" fill="#5c6884" font-size="12">no traffic yet</text>';
+  // provider health from observed logs
+  const byProv = {};
+  for (const p of providers) byProv[p.id] = { n: 0, ok: 0, lat: [] };
+  for (const l of logs) { if (l.provider && byProv[l.provider]) { byProv[l.provider].n++; if (l.status === 'ok') byProv[l.provider].ok++; byProv[l.provider].lat.push(l.latencyMs); } }
+  $('health').innerHTML = providers.length ? '' : '<div class="o-empty">No providers yet — add one in the Providers tab.</div>';
+  for (const p of providers) {
+    const h = byProv[p.id];
+    const rate = h.n ? (100 * h.ok / h.n) : null;
+    const st = !p.enabled ? ['off', 'disabled', 'o-dot--off'] : rate === null ? ['on', 'no data', ''] : rate >= 95 ? ['on', `${rate.toFixed(1)}% ok`, ''] : rate >= 75 ? ['on', `${rate.toFixed(1)}% ok`, 'o-dot--warn'] : ['on', `${rate.toFixed(1)}% ok`, 'o-dot--bad'];
+    const d = document.createElement('div'); d.className = 'item';
+    d.style.cssText = 'display:flex;gap:14px;align-items:center;border:1px solid var(--orin-line);border-radius:12px;padding:12px 16px;margin:9px 0;background:rgba(2,5,11,.45)';
+    d.innerHTML = `<span class="o-dot ${st[2]}"></span><span style="flex:1"><b class="o-mono">${esc(p.id)}</b> <span class="o-mut">· ${esc(p.type)}</span><br /><span class="o-mut" style="font-size:12px">${h.n ? `${h.n} req · med ${median(h.lat)}ms` : 'no requests yet'}</span></span><span class="o-badge ${p.enabled ? (rate !== null && rate < 75 ? 'o-badge--bad' : 'o-badge--ok') : ''}">${st[1]}</span>`;
+    $('health').appendChild(d);
+  }
+}
+
+/* ---------- providers ---------- */
+$('p-type').onchange = () => $('p-url-wrap').classList.toggle('o-hidden', $('p-type').value !== 'custom');
 $('btn-add').onclick = () => busy($('btn-add'), async () => {
   try {
     $('p-msg').textContent = 'saving…';
@@ -370,71 +415,283 @@ $('btn-add').onclick = () => busy($('btn-add'), async () => {
       models: $('p-models').value.split(',').map((s) => s.trim()).filter(Boolean),
     }) });
     $('p-msg').textContent = 'saved ✓'; $('p-key').value = ''; $('p-id').value = ''; $('p-models').value = '';
-    toast('Provider saved ✓');
-    loadProviders();
+    toast('Provider saved ✓'); await refreshAll(); renderProviders(); loadOverview();
   } catch (e) { $('p-msg').textContent = e.message; }
 });
+function renderProviders() {
+  $('providers').innerHTML = providers.length ? '' : '<div class="o-empty">No providers yet — add your first API above.</div>';
+  for (const p of providers) {
+    const d = document.createElement('div');
+    d.style.cssText = 'display:flex;gap:14px;align-items:center;border:1px solid var(--orin-line);border-radius:12px;padding:12px 16px;margin:9px 0;background:rgba(2,5,11,.45)';
+    d.innerHTML = `<span class="o-dot${p.enabled ? '' : ' o-dot--off'}"></span><span style="flex:1;min-width:0"><b class="o-mono">${esc(p.id)}</b> <span class="o-mut">· ${esc(p.type)}</span><br /><span class="o-mut" style="font-size:12.5px">${esc((p.models || []).join(', ') || 'any model')}</span></span>`;
+    const wrap = document.createElement('span'); wrap.className = 'o-row';
+    const tg = document.createElement('button');
+    tg.className = 'o-btn o-btn--ghost o-btn--sm'; tg.textContent = p.enabled ? 'Disable' : 'Enable';
+    tg.setAttribute('aria-pressed', String(p.enabled));
+    tg.onclick = () => busy(tg, async () => {
+      await api('/api/providers', { method: 'POST', body: JSON.stringify({ id: p.id, type: p.type, enabled: !p.enabled }) });
+      toast(p.enabled ? 'Provider disabled' : 'Provider enabled');
+      await refreshAll(); renderProviders(); loadOverview();
+    });
+    const t = document.createElement('button'); t.className = 'o-btn o-btn--ghost o-btn--sm'; t.textContent = 'Test';
+    t.onclick = () => busy(t, async () => {
+      try {
+        const r = await api('/api/providers', { method: 'POST', body: JSON.stringify({ action: 'test', id: p.id }) });
+        toast(r.ok ? `✓ live · ${r.latencyMs}ms` : '✗ failed: ' + (r.error || 'unknown'));
+        await refreshAll(); loadOverview();
+      } catch { toast('Test failed'); }
+    });
+    const del = document.createElement('button'); del.className = 'o-btn o-btn--danger o-btn--sm'; del.textContent = 'Delete';
+    del.onclick = async () => {
+      if (!confirm(`Delete provider ${p.id}?`)) return;
+      await api('/api/providers?id=' + p.id, { method: 'DELETE' });
+      toast('Provider deleted'); await refreshAll(); renderProviders(); loadOverview();
+    };
+    wrap.append(tg, t, del); d.appendChild(wrap);
+    $('providers').appendChild(d);
+  }
+}
 
-async function loadKeys() {
-  const { keys } = await api('/api/keys');
-  $('keys').innerHTML = keys.length ? '' : '<div class="empty">No keys yet — mint one above.</div>';
+/* ---------- models ---------- */
+function modelRows() {
+  const map = new Map();
+  for (const p of providers) {
+    for (const m of (p.models || []).length ? p.models : [`(any model via ${p.id})`]) {
+      if (!map.has(m)) map.set(m, { model: m, provs: [] });
+      map.get(m).provs.push(p);
+    }
+  }
+  const q = $('m-search').value.trim().toLowerCase();
+  const pf = $('m-prov').value, af = $('m-avail').value;
+  const rows = [];
+  for (const { model, provs } of map.values()) {
+    if (q && !model.toLowerCase().includes(q)) continue;
+    if (pf && !provs.some((p) => p.id === pf)) continue;
+    const live = provs.some((p) => p.enabled);
+    if (af === 'live' && !live) continue;
+    if (af === 'off' && live) continue;
+    const rel = logs.filter((l) => l.requested === model);
+    const ok = rel.filter((l) => l.status === 'ok');
+    rows.push({ model, provs, live, n: rel.length, med: median(rel.map((l) => l.latencyMs)), err: rel.length - ok.length });
+  }
+  return rows.sort((a, b) => b.n - a.n || a.model.localeCompare(b.model));
+}
+function renderModels() {
+  const sel = $('m-prov');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All providers</option>' + providers.map((p) => `<option value="${esc(p.id)}">${esc(p.id)}</option>`).join('');
+  sel.value = cur;
+  const rows = modelRows();
+  $('models').innerHTML = rows.length ? '' : '<div class="o-empty">No models match. Add providers or clear filters.</div>';
+  if (!rows.length) return;
+  const t = document.createElement('div'); t.className = 'o-tblwrap';
+  t.innerHTML = '<table class="o-table"><thead><tr><th>model</th><th>providers</th><th>requests</th><th>med latency</th><th>errors</th><th>status</th></tr></thead><tbody>' +
+    rows.map((r) => `<tr><td>${esc(r.model)}</td><td>${r.provs.map((p) => esc(p.id)).join(', ')}</td><td>${r.n}</td><td>${r.n ? r.med + 'ms' : '—'}</td><td class="${r.err ? 'o-bad' : ''}">${r.err || '—'}</td><td class="${r.live ? 'o-ok' : 'o-bad'}">${r.live ? 'live' : 'disabled'}</td></tr>`).join('') + '</tbody></table>';
+  $('models').appendChild(t);
+}
+$('m-search').oninput = renderModels;
+$('m-prov').onchange = renderModels;
+$('m-avail').onchange = renderModels;
+
+/* ---------- routing graph ---------- */
+function renderRouting() {
+  const sel = $('r-model');
+  const models = [...new Set(providers.flatMap((p) => p.models || []))].sort();
+  sel.innerHTML = models.map((m) => `<option>${esc(m)}</option>`).join('') || '<option value="">— add a provider first —</option>';
+  drawGraph();
+}
+function candidatesFor(model) {
+  return providers.filter((p) => p.enabled && ((p.models || []).length === 0 || p.models.includes(model)));
+}
+function drawGraph() {
+  const model = $('r-model').value;
+  const cands = model ? candidatesFor(model) : [];
+  const g = $('graph');
+  const rowH = 64, top = 84, W = 560;
+  const H = top + Math.max(cands.length, 1) * rowH + 30;
+  g.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  const cx = W / 2, bw = 300, bh = 40;
+  const box = (x, y, label, hot, dot) =>
+    `<rect class="node${hot ? ' hot' : ''}" x="${x - bw / 2}" y="${y}" width="${bw}" height="${bh}" rx="10"/>` +
+    (dot ? `<circle class="${dot}" cx="${x - bw / 2 + 20}" cy="${y + bh / 2}" r="4"/>` : '') +
+    `<text x="${x}" y="${y + 25}" text-anchor="middle">${esc(label)}</text>`;
+  let s = box(cx, 8, '◉ REQUEST', false, null);
+  s += `<path class="edge" d="M ${cx} 48 L ${cx} 76"/>`;
+  s += box(cx, 76, 'ORIN ROUTER', true, null);
+  let y = 76 + bh + 26;
+  if (!cands.length) {
+    s += `<text x="${cx}" y="${y + 20}" text-anchor="middle" fill="#5c6884">no enabled provider serves “${esc(model || '—')}”</text>`;
+  }
+  cands.forEach((p, i) => {
+    const rel = logs.filter((l) => l.provider === p.id);
+    const bad = rel.length > 0 && rel.filter((l) => l.status === 'ok').length / rel.length < .75;
+    const dot = bad ? 'baddot' : 'okdot';
+    if (i === 0) s += `<path class="edge" d="M ${cx} ${y - 26} L ${cx} ${y}"/>`;
+    else s += `<path class="edge fail" d="M ${cx - 60} ${y - 26 - rowH + bh} C ${cx - 60} ${y - 10}, ${cx - 60} ${y - 10}, ${cx} ${y}"/>` +
+      `<text class="elabel" x="${cx - 150}" y="${y - 8}" text-anchor="middle">on failure</text>`;
+    s += box(cx, y, `${i === 0 ? 'PRIMARY · ' : 'FALLBACK · '}${p.id}`, i === 0, dot);
+    y += rowH;
+  });
+  if (cands.length) {
+    s += `<path class="edge" d="M ${cx} ${y - 26} L ${cx} ${y - 8}"/>`;
+    s += `<text x="${cx}" y="${y + 12}" text-anchor="middle" fill="#34d399">◉ RESPONSE · first success wins</text>`;
+    y += 30;
+  }
+  g.setAttribute('viewBox', `0 0 ${W} ${y}`);
+  g.innerHTML = s;
+  const cards = $('route-cards');
+  cards.innerHTML = '';
+  for (const p of cands) {
+    const rel = logs.filter((l) => l.provider === p.id);
+    const d = document.createElement('div');
+    d.style.cssText = 'display:flex;gap:12px;align-items:center;border:1px solid var(--orin-line);border-radius:12px;padding:11px 16px;margin:8px 0;background:rgba(2,5,11,.45);font-size:13px';
+    d.innerHTML = `<span class="o-dot"></span><b class="o-mono">${esc(p.id)}</b><span class="o-mut">· ${esc(p.type)} · ${rel.length} req${rel.length ? ` · med ${median(rel.map((l) => l.latencyMs))}ms` : ''}</span>`;
+    cards.appendChild(d);
+  }
+}
+$('r-model').onchange = drawGraph;
+
+/* ---------- keys ---------- */
+$('btn-mint').onclick = () => busy($('btn-mint'), async () => {
+  try {
+    const { key, prefix } = await api('/api/keys', { method: 'POST', body: JSON.stringify({ name: $('key-name').value.trim() || 'default', perMin: Number($('key-rpm').value) || 0 }) });
+    await copyText(key);
+    $('key-once').innerHTML = '';
+    const box = document.createElement('div');
+    box.style.cssText = 'border:1px solid rgba(154,162,255,.4);background:rgba(154,162,255,.07);border-radius:12px;padding:14px 16px;margin:12px 0';
+    box.innerHTML = `<b>🔑 API key created — this secret is shown once, never again</b><span class="o-mono" style="display:block;margin:8px 0;font-size:13px;color:var(--orin-prod)"></span><div class="o-row"></div>`;
+    box.querySelector('.o-mono').textContent = key;
+    const b = document.createElement('button'); b.className = 'o-btn o-btn--sm'; b.textContent = '⧉ Copy';
+    b.onclick = async () => { await copyText(key); toast('Key copied ✓'); };
+    const x = document.createElement('button'); x.className = 'o-btn o-btn--ghost o-btn--sm'; x.textContent = 'Hide';
+    x.onclick = () => box.remove();
+    box.querySelector('.o-row').append(b, x);
+    $('key-once').appendChild(box);
+    $('key-name').value = '';
+    toast(`Key ${prefix}… minted + copied ✓`);
+    await refreshAll(); renderKeys(); fillPlaygroundKeys();
+  } catch (e) { toast(e.message); }
+});
+function renderKeys() {
+  $('keys').innerHTML = keys.length ? '' : '<div class="o-empty">No keys yet — create one above.</div>';
   for (const k of keys) {
-    const d = document.createElement('div'); d.className = 'item';
-    d.innerHTML = `<span class="sdot${k.enabled ? '' : ' off'}"></span><span class="grow"><span class="t1">${esc(k.name)}</span><span class="t2" style="display:block"><code>${esc(k.prefix)}…</code>${k.perMin ? ` · ${k.perMin}/min` : ''}</span></span><span class="status ${k.enabled ? 'on' : 'off'}">${k.enabled ? 'active' : 'revoked'}</span>`;
+    const d = document.createElement('div');
+    d.style.cssText = 'display:flex;gap:14px;align-items:center;border:1px solid var(--orin-line);border-radius:12px;padding:12px 16px;margin:9px 0;background:rgba(2,5,11,.45)';
+    d.innerHTML = `<span class="o-dot${k.enabled ? '' : ' o-dot--off'}"></span><span style="flex:1;min-width:0"><b>${esc(k.name)}</b><br /><span class="o-mono" style="font-size:12.5px;color:var(--orin-dim)"><code style="font-size:11.5px">${esc(k.prefix)}…</code>${k.perMin ? ` · ${k.perMin}/min` : ''}</span></span><span class="o-badge ${k.enabled ? 'o-badge--ok' : ''}">${k.enabled ? 'active' : 'revoked'}</span>`;
     if (k.enabled) {
-      const b = document.createElement('button'); b.className = 'btn danger small'; b.textContent = 'Revoke';
-      b.onclick = async () => { if (!confirm('Revoke this key? Apps using it break immediately.')) return; await api('/api/keys?id=' + k.id, { method: 'DELETE' }); toast('Key revoked'); loadKeys(); };
+      const b = document.createElement('button'); b.className = 'o-btn o-btn--danger o-btn--sm'; b.textContent = 'Revoke';
+      b.onclick = async () => {
+        if (!confirm('Revoke this key? Apps using it break immediately.')) return;
+        await api('/api/keys?id=' + k.id, { method: 'DELETE' });
+        toast('Key revoked'); await refreshAll(); renderKeys(); fillPlaygroundKeys();
+      };
       d.appendChild(b);
     }
     $('keys').appendChild(d);
   }
 }
 
-async function loadProviders() {
-  const { providers } = await api('/api/providers');
-  $('providers').innerHTML = providers.length ? '' : '<div class="empty">No providers yet — add your first API above.</div>';
-  for (const p of providers) {
-    const d = document.createElement('div'); d.className = 'item';
-    d.innerHTML = `<span class="sdot${p.enabled ? '' : ' off'}"></span><span class="grow"><span class="t1">${esc(p.id)} <span class="mut">· ${esc(p.type)}</span></span><span class="t2" style="display:block">${esc((p.models || []).join(', ') || 'any model')}</span></span><span class="status" data-test>—</span>`;
-    const wrap = document.createElement('span'); wrap.className = 'row';
-    const t = document.createElement('button'); t.className = 'btn ghost small'; t.textContent = 'Test';
-    t.onclick = () => busy(t, async () => {
-      try {
-        const r = await api('/api/providers', { method: 'POST', body: JSON.stringify({ action: 'test', id: p.id }) });
-        const st = d.querySelector('[data-test]');
-        st.textContent = r.ok ? `✓ ${r.latencyMs}ms` : '✗ fail';
-        st.className = 'status ' + (r.ok ? 'on' : 'err');
-        if (!r.ok) toast('Test failed: ' + (r.error || 'unknown'));
-      } catch { const st = d.querySelector('[data-test]'); st.textContent = '✗ fail'; st.className = 'status err'; }
-      setTimeout(loadProviders, 1500);
-    });
-    const del = document.createElement('button'); del.className = 'btn danger small'; del.textContent = 'Delete';
-    del.onclick = async () => { if (!confirm(`Delete provider ${p.id}?`)) return; await api('/api/providers?id=' + p.id, { method: 'DELETE' }); toast('Provider deleted'); loadProviders(); };
-    wrap.appendChild(t); wrap.appendChild(del); d.appendChild(wrap);
-    $('providers').appendChild(d);
-  }
+/* ---------- playground ---------- */
+function fillPlaygroundKeys() {
+  const sel = $('pg-key');
+  const cur = sel.value;
+  sel.innerHTML = keys.filter((k) => k.enabled).map((k) => `<option value="${k.id}">${esc(k.name)} (${esc(k.prefix)}…)</option>`).join('') || '<option value="">— mint a key first —</option>';
+  if (cur) sel.value = cur;
+  const ms = $('pg-model');
+  const mcur = ms.value;
+  ms.innerHTML = [...new Set(providers.filter((p) => p.enabled).flatMap((p) => p.models || []))].sort().map((m) => `<option>${esc(m)}</option>`).join('') || '<option value="">— no models —</option>';
+  if (mcur) ms.value = mcur;
 }
+$('pg-send').onclick = () => busy($('pg-send'), async () => {
+  const keyRec = keys.find((k) => k.id === $('pg-key').value);
+  if (!keyRec) { toast('Mint a gateway key first'); return; }
+  const secret = $('pg-secret').value.trim();
+  if (!secret) { toast('Paste the key secret (shown once at mint — never stored)'); return; }
+  const model = $('pg-model').value;
+  const messages = [];
+  if ($('pg-system').value.trim()) messages.push({ role: 'system', content: $('pg-system').value.trim() });
+  messages.push({ role: 'user', content: $('pg-user').value });
+  const body = { model, messages, temperature: Number($('pg-temp').value), max_tokens: Number($('pg-max').value), stream: $('pg-stream').checked };
+  $('pg-req').textContent = `POST /v1/chat/completions\n${JSON.stringify({ model, temperature: body.temperature, max_tokens: body.max_tokens, stream: body.stream, messages: messages.map((m) => ({ role: m.role, content: m.content.slice(0, 120) })) }, null, 2)}`;
+  $('pg-resp').textContent = '…';
+  $('pg-meta').textContent = 'sending…';
+  const t0 = performance.now();
+  try {
+    if (body.stream) {
+      const r = await fetch('/v1/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + secret }, body: JSON.stringify(body) });
+      if (!r.ok || !r.body) throw new Error('request failed: ' + r.status);
+      const reader = r.body.getReader(); const dec = new TextDecoder(); let buf = '', text = '', done = false;
+      $('pg-resp').textContent = '';
+      for (;;) {
+        const { done: d, value } = await reader.read();
+        if (d) break;
+        buf += dec.decode(value, { stream: true });
+        const parts = buf.split('\n\n'); buf = parts.pop() || '';
+        for (const part of parts) {
+          for (const line of part.split('\n')) {
+            if (!line.startsWith('data:')) continue;
+            const data = line.slice(5).trim();
+            if (data === '[DONE]') { done = true; break; }
+            try {
+              const j = JSON.parse(data);
+              if (j.error) throw new Error(j.error.message || 'provider error');
+              const delta = j.choices?.[0]?.delta?.content;
+              if (delta) { text += delta; $('pg-resp').textContent = text; }
+            } catch (e) { if (e instanceof SyntaxError) continue; throw e; }
+          }
+          if (done) break;
+        }
+        if (done) break;
+      }
+      const ms = Math.round(performance.now() - t0);
+      $('pg-meta').textContent = `${ms}ms · ${model} · streamed`;
+    } else {
+      const r = await fetch('/v1/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + secret }, body: JSON.stringify(body) });
+      const j = await r.json();
+      const ms = Math.round(performance.now() - t0);
+      if (!r.ok) throw new Error((j.error && j.error.message) || 'request failed');
+      $('pg-resp').textContent = j.choices?.[0]?.message?.content || '(empty)';
+      $('pg-meta').textContent = `${ms}ms · id ${j.id || '—'} · ${j.model || model}`;
+    }
+    await refreshAll(); loadOverview();
+  } catch (e) { $('pg-resp').textContent = 'Error: ' + e.message; $('pg-meta').textContent = 'failed'; }
+});
 
-async function loadStats() {
-  const s = await api('/api/stats');
-  $('stats').innerHTML =
-    `<div class="stat"><div class="v">${s.total}</div><div class="l">requests</div></div>` +
-    `<div class="stat"><div class="v ok">${s.ok}</div><div class="l">ok</div></div>` +
-    `<div class="stat"><div class="v bad">${s.errors}</div><div class="l">errors</div></div>` +
-    `<div class="stat"><div class="v">${s.avgLatencyMs}<span style="font-size:15px">ms</span></div><div class="l">avg latency</div></div>`;
-}
-
+/* ---------- logs ---------- */
 async function loadLogs() {
-  const { logs } = await api('/api/logs?limit=30');
-  $('logs').innerHTML = logs.map((l) => `<tr><td>${new Date(l.at).toLocaleString()}</td><td>${esc(l.requested)}</td><td>${esc(l.provider || '—')}</td><td class="${l.status === 'ok' ? 'ok' : 'bad'}">${esc(l.status)}</td><td>${l.latencyMs}</td><td>${esc((l.error || '').slice(0, 80))}</td></tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--dim)">no traffic yet — make your first request</td></tr>';
+  $('logs').innerHTML = logs.slice(0, 30).map((l, i) =>
+    `<tr data-i="${i}"><td>${new Date(l.at).toLocaleString()}</td><td>${esc(l.requested)}</td><td>${esc(l.provider || '—')}</td><td class="${l.status === 'ok' ? 'o-ok' : 'o-bad'}">${esc(l.status)}</td><td>${l.latencyMs}</td><td>${esc((l.error || '').slice(0, 60))}</td></tr>`
+  ).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--orin-dim)">no traffic yet — make your first request</td></tr>';
+  $('logs').querySelectorAll('tr[data-i]').forEach((tr) => tr.addEventListener('click', () => {
+    const l = logs[Number(tr.dataset.i)];
+    $('log-detail').innerHTML =
+      `<dt>time</dt><dd>${new Date(l.at).toLocaleString()}</dd>` +
+      `<dt>request id</dt><dd>${esc(l.requestId)}</dd>` +
+      `<dt>requested</dt><dd>${esc(l.requested)}</dd>` +
+      `<dt>provider</dt><dd>${esc(l.provider || '—')}</dd>` +
+      `<dt>answered model</dt><dd>${esc(l.model || '—')}</dd>` +
+      `<dt>status</dt><dd>${esc(l.status)}</dd>` +
+      `<dt>latency</dt><dd>${l.latencyMs}ms</dd>` +
+      `<dt>prompt chars</dt><dd>${l.promptChars ?? 0}</dd>` +
+      `<dt>completion chars</dt><dd>${l.completionChars ?? 0}</dd>` +
+      (l.error ? `<dt>error</dt><dd>${esc(l.error)}</dd>` : '');
+    modal('log-modal').open();
+  }));
 }
+$('log-close').onclick = () => modal('log-modal').close();
 
-async function openDash() {
+/* ---------- dash ---------- */
+async function openDash(tab = 'overview') {
   if (!localStorage.getItem('orin_token')) { show('view-home'); return; }
   show('view-dash');
-  try { await Promise.all([loadKeys(), loadProviders(), loadStats(), loadLogs()]); }
-  catch (e) { toast(e.message); show('view-home'); }
+  try {
+    await refreshAll();
+    renderProviders(); renderModels(); renderRouting(); renderKeys(); fillPlaygroundKeys();
+    await loadOverview(); await loadLogs();
+    document.querySelector(`#dash-tabs [data-tab="${tab}"]`)?.click();
+  } catch (e) { toast(e.message); show('view-home'); }
 }
+$('btn-forget').onclick = () => { signOut(); show('view-home'); toast('Signed out'); };
 if (localStorage.getItem('orin_token')) openDash();
 </script>
 </body>

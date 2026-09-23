@@ -1,0 +1,72 @@
+/**
+ * ORIN DESIGN SYSTEM — v1.0.0
+ * Canonical source: github.com/januththedev/orin-ui
+ * Vendored copies live in each product repo under ui/ (same version).
+ * Tokens first, components second. No product-specific styling here.
+ */
+
+:root {
+  /* ---- surfaces (dark-first) ---- */
+  --orin-bg0: #04060c;
+  --orin-bg1: #080d18;
+  --orin-panel: rgba(148, 184, 255, .045);
+  --orin-panel2: rgba(148, 184, 255, .08);
+  --orin-inset: rgba(2, 5, 11, .6);
+
+  /* ---- borders ---- */
+  --orin-line: rgba(148, 184, 255, .14);
+  --orin-line2: rgba(148, 184, 255, .24);
+  --orin-line-acc: rgba(94, 234, 212, .35);
+
+  /* ---- text ---- */
+  --orin-txt: #e9f1ff;
+  --orin-mut: #8f9cbd;
+  --orin-dim: #5c6884;
+
+  /* ---- brand (shared) ---- */
+  --orin-acc: #5eead4;
+  --orin-acc-d: #04211c;
+  --orin-vio: #8b93ff;
+
+  /* ---- product accents (identity per product, same geometry) ---- */
+  --orin-prod: var(--orin-acc);          /* override per product */
+  --orin-prod-d: var(--orin-acc-d);
+
+  /* ---- status ---- */
+  --orin-ok: #34d399;
+  --orin-warn: #fbbf24;
+  --orin-bad: #f87171;
+
+  /* ---- typography ---- */
+  --orin-font: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --orin-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --orin-display: clamp(34px, 5.4vw, 60px);
+  --orin-h1: 26px;
+  --orin-h2: 19px;
+  --orin-h3: 15.5px;
+  --orin-body: 15px;
+  --orin-small: 13.5px;
+  --orin-cap: 12px;
+
+  /* ---- spacing ---- */
+  --orin-s1: 4px; --orin-s2: 8px; --orin-s3: 12px; --orin-s4: 16px;
+  --orin-s5: 24px; --orin-s6: 32px; --orin-s7: 48px; --orin-s8: 64px;
+
+  /* ---- radius ---- */
+  --orin-r-s: 10px; --orin-r: 16px; --orin-r-l: 14px; --orin-pill: 99px;
+
+  /* ---- shadows ---- */
+  --orin-sh-btn: 0 8px 24px -8px rgba(94, 234, 212, .45);
+  --orin-sh-win: 0 30px 80px -20px rgba(0, 0, 0, .7);
+  --orin-sh-pop: 0 16px 40px -10px rgba(0, 0, 0, .7);
+
+  /* ---- motion ---- */
+  --orin-t-fast: .12s; --orin-t-med: .2s; --orin-t-slow: .45s;
+  --orin-ease: cubic-bezier(.2, .7, .3, 1);
+
+  /* ---- breakpoints ---- */
+  --orin-bp-s: 640px; --orin-bp-m: 900px; --orin-bp-l: 1200px;
+
+  /* ---- z-index ---- */
+  --orin-z-nav: 20; --orin-z-modal: 60; --orin-z-toast: 99;
+}

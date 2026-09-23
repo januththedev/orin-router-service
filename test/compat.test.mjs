@@ -215,6 +215,19 @@ test('users only see their own providers, keys and logs', async () => {
   assert.equal((await store.listKeys('u2')).length, 1);
 });
 
+test('provider update without apiKey keeps the stored key', async () => {
+  const { addProvider } = await import('../src/service.ts');
+  const store = fakeStore();
+  await assert.rejects(addProvider(store, 'u1', { id: 'g1', type: 'groq' }), /apiKey/);
+  await addProvider(store, 'u1', { id: 'g1', type: 'groq', apiKey: 'gsk-x', models: ['llama'] });
+  const r = await addProvider(store, 'u1', { id: 'g1', type: 'groq', enabled: false });
+  assert.equal(r.updated, true);
+  const all = await store.getProviders('u1');
+  assert.equal(all.length, 1);
+  assert.equal(all[0].enabled, false);
+  assert.equal(all[0].apiKey, 'gsk-x');
+  assert.deepEqual(all[0].models, ['llama']);
+});
 test('addProvider validates input and testProvider reports live results', async () => {
   const { addProvider, testProvider } = await import('../src/service.ts');
   const store = fakeStore();
