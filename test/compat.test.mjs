@@ -11,32 +11,29 @@ import {
 import { hashSecret } from '../src/keys.ts';
 import { OrinError } from '../src/errors.ts';
 import { RateLimit } from '../src/ratelimit.ts';
-import { fakeStore, keyRec, okAdapter, scriptAdapter } from './_fake.mjs';
+import { fakeStore, keyRec, okAdapter, provRec, scriptAdapter } from './_fake.mjs';
 
 const SECRET = 'orin_testsecret00000000000000000001';
 
-async function seeded(adapters, routeHops = [{ provider: 'a', model: 'm' }], keyOver = {}) {
+async function seeded(adapters, aModels = ['smart'], keyOver = {}, bModels = []) {
   const store = fakeStore();
   await store.createKey({ ...keyRec(), hash: hashSecret(SECRET), ...keyOver });
-  await store.saveProvider({ id: 'a', type: 'custom', baseUrl: 'https://x.test/v1', apiKey: 'k', models: [], enabled: true });
-  await store.saveProvider({ id: 'b', type: 'custom', baseUrl: 'https://y.test/v1', apiKey: 'k', models: [], enabled: true });
-  await store.saveRoute({ id: 'smart', enabled: true, hops: routeHops });
+  await store.saveProvider(provRec('a', { models: aModels }));
+  await store.saveProvider(provRec('b', { baseUrl: 'https://y.test/v1', models: bModels }));
   return { store, adapters: new Map(Object.entries(adapters)) };
 }
 
 const HELLO = { messages: [{ role: 'user', content: 'hi' }] };
 
-test('models lists enabled routes only', async () => {
-  const store = fakeStore({
-    routes: {
-      on: { id: 'on', enabled: true, hops: [{ provider: 'a', model: 'm' }] },
-      off: { id: 'off', enabled: false, hops: [{ provider: 'a', model: 'm' }] },
-      empty: { id: 'empty', enabled: true, hops: [] },
-    },
-  });
-  const out = await listModels(store);
+test('models lists the union of a user\u2019s configured models only', async () => {
+  const store = fakeStore();
+  await store.saveProvider(provRec('a', { models: ['m1', 'm2'] }));
+  await store.saveProvider(provRec('off', { models: ['m9'], enabled: false }));
+  await store.saveProvider(provRec('wild', { models: [] }));
+  await store.saveProvider({ ...provRec('other-user', { models: ['mx'] }), userUid: 'u2' });
+  const out = await listModels(store, 'u1');
   assert.equal(out.object, 'list');
-  assert.deepEqual(out.data.map((d) => d.id), ['on']);
+  assert.deepEqual(out.data.map((d) => d.id), ['m1', 'm2']);
   assert.equal(out.data[0].owned_by, 'orin-router');
 });
 
@@ -75,11 +72,11 @@ test('malformed chat bodies are rejected before any provider is touched', async 
   assert.equal(adapters.size, 1);
 });
 
-test('unknown route alias tells the client to check /v1/models', async () => {
-  const { store, adapters } = await seeded({ a: okAdapter('a') });
+test('unknown model tells the client what is available', async () => {
+  const { store, adapters } = await seeded({ a: okAdapter('a') }, ['smart'], {}, ['other']);
   await assert.rejects(
     chatCompletions({ store, adapters }, { authHeader: `Bearer ${SECRET}`, rawBody: { model: 'nope', ...HELLO } }),
-    (e) => e.status === 400 && /v1\/models/.test(e.message),
+    (e) => e.status === 400 && /Available/.test(e.message),
   );
 });
 
@@ -112,7 +109,7 @@ test('provider failure across all hops logs the error and throws', async () => {
 });
 
 test('per-key RPM gate trips at the limit', async () => {
-  const { store, adapters } = await seeded({ a: okAdapter('a') }, [{ provider: 'a', model: 'm' }], { perMin: 1 });
+  const { store, adapters } = await seeded({ a: okAdapter('a') }, ['smart'], { perMin: 1 });
   const limits = new RateLimit(() => 5000);
   await chatCompletions({ store, adapters, limits }, { authHeader: `Bearer ${SECRET}`, rawBody: { model: 'smart', ...HELLO } });
   await assert.rejects(
@@ -166,10 +163,10 @@ test('mid-stream provider death emits an error payload, closes cleanly, logs', a
   assert.equal(store.logs[0].status, 'error');
 });
 
-test('streaming falls across hops when the first dies pre-stream', async () => {
+test('streaming falls across providers when the first dies pre-stream', async () => {
   const err = new OrinError('provider', 'bad');
   err.action = 'retry';
-  const { store } = await seeded({}, [{ provider: 'a', model: 'm' }, { provider: 'b', model: 'm' }]);
+  const { store } = await seeded({}, ['m']);
   const adapters = new Map([
     ['a', scriptAdapter('a', { chatStream: err })],
     ['b', scriptAdapter('b', { chatStream: async (_c, on) => { on('B!'); return { text: 'B!', model: 'm' }; } })],
@@ -177,7 +174,7 @@ test('streaming falls across hops when the first dies pre-stream', async () => {
   const lines = [];
   await chatCompletionsStream({ store, adapters }, {
     authHeader: `Bearer ${SECRET}`,
-    rawBody: { model: 'smart', ...HELLO },
+    rawBody: { model: 'm', ...HELLO },
     onSse: (l) => lines.push(l),
   });
   assert.ok(lines.some((l) => /"content":"B!"/.test(l)));
@@ -199,7 +196,38 @@ test('streaming rejects bad auth before emitting anything', async () => {
 
 test('key hashes are never listed', async () => {
   const { store } = await seeded({});
-  const got = await store.listKeys();
+  const got = await store.listKeys('u1');
   assert.equal(got.length, 1);
   assert.equal(got[0].hash, undefined);
+});
+
+test('users only see their own providers, keys and logs', async () => {
+  const store = fakeStore();
+  await store.createKey({ ...keyRec(), hash: hashSecret(SECRET) });
+  await store.createKey({ ...keyRec({ id: 'k2', prefix: 'orin_u2' }), userUid: 'u2', hash: hashSecret('orin_u2secret00000000000000000003') });
+  await store.saveProvider(provRec('a', { models: ['smart'] }));
+  await store.saveProvider({ ...provRec('a', { models: ['evil'] }), userUid: 'u2' });
+  const me = await authenticate(`Bearer ${SECRET}`, store);
+  assert.equal(me.userUid, 'u1');
+  const out = await listModels(store, me.userUid);
+  assert.deepEqual(out.data.map((d) => d.id), ['smart']);
+  assert.equal((await store.listKeys('u1')).length, 1);
+  assert.equal((await store.listKeys('u2')).length, 1);
+});
+
+test('addProvider validates input and testProvider reports live results', async () => {
+  const { addProvider, testProvider } = await import('../src/service.ts');
+  const store = fakeStore();
+  await assert.rejects(addProvider(store, 'u1', { id: 'BAD ID', type: 'groq', apiKey: 'k' }), /id/);
+  await assert.rejects(addProvider(store, 'u1', { id: 'g1', type: 'nope', apiKey: 'k' }), /type/);
+  await addProvider(store, 'u1', { id: 'g1', type: 'groq', apiKey: 'gsk-x', models: ['llama'] });
+  const all = await store.getProviders('u1');
+  assert.equal(all.length, 1);
+  assert.equal(all[0].type, 'groq');
+  const adapters = new Map([['g1', okAdapter('g1', 'ok!')]]);
+  const r = await testProvider({ store, adapters }, 'u1', 'g1');
+  assert.equal(r.ok, true);
+  assert.equal(r.text, 'ok!');
+  assert.equal(store.logs.length, 1);
+  assert.equal(store.logs[0].requested, '(test) llama');
 });

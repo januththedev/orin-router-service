@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Orin Router — Many APIs In, One API Out | Orin AI</title>
+<meta name="description" content="Orin Router: add your OpenRouter, Groq and OpenAI-compatible API keys, get ONE OpenAI-compatible endpoint with automatic failover. Many APIs in, one API out." />
+<link rel="canonical" href="https://router.orinai.org/" />
+<meta property="og:title" content="Orin Router — many APIs in, one API out" />
+<meta property="og:description" content="Bring your own keys. Get one endpoint. Automatic failover. By Orin AI." />
+<meta property="og:url" content="https://router.orinai.org/" />
+<meta property="og:type" content="website" />
+<meta name="theme-color" content="#05070d" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2305070d'/%3E%3Cpath d='M6 16h6l3-7 4 14 3-7h4' stroke='%235eead4' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Orin Router","applicationCategory":"DeveloperApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0"},"provider":{"@type":"Organization","name":"Orin AI","url":"https://orinai.org"}}
+</script>
+<style>
+:root{--bg:#05070d;--panel:#0a0f1a;--line:#1b2740;--txt:#dbe7ff;--mut:#8494b3;--acc:#5eead4;--bad:#f87171;--warn:#fbbf24;--ok:#34d399}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+a{color:var(--acc)}header{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--line)}
+.logo{font-family:monospace;font-weight:700;color:var(--acc)}.sp{flex:1}.mut{color:var(--mut)}
+main{max-width:1060px;margin:0 auto;padding:24px 20px 60px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin:14px 0}
+.btn{background:var(--acc);color:#04211c;border:0;border-radius:9px;padding:9px 16px;font-weight:700;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--acc);border:1px solid var(--acc)}
+.btn.danger{background:transparent;color:var(--bad);border:1px solid var(--bad)}
+.btn.small{padding:5px 10px;font-size:13px}
+input,select{width:100%;background:#060b15;border:1px solid var(--line);color:var(--txt);border-radius:9px;padding:9px 11px;margin:6px 0}
+label{font-size:12px;color:var(--mut)}code{font-family:monospace;background:#060b15;padding:2px 6px;border-radius:6px}
+pre{background:#020409;border:1px solid var(--line);border-radius:10px;padding:12px;overflow-x:auto;font-size:13px}
+.hero h1{font-size:clamp(28px,5vw,52px);margin:10px 0}h2{margin:6px 0 10px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.item{display:flex;gap:10px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0}
+.mono{font-family:monospace;font-size:13px;word-break:break-all}
+.ok{color:var(--ok)}.bad{color:var(--bad)}.warn{color:var(--warn)}
+.stat{font-size:26px;font-weight:800}footer{border-top:1px solid var(--line);padding:18px 20px;color:var(--mut);font-size:13px;display:flex;gap:14px;flex-wrap:wrap}
+.hidden{display:none!important}table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);font-family:monospace}
+</style>
+</head>
+<body>
+<header><span class="logo">≋ orin router</span><span class="sp"></span><span class="mut">by Orin AI</span></header>
+<main>
+<section id="view-home">
+  <div class="hero">
+    <h1>Many APIs in.<br />One API out.</h1>
+    <p class="mut">Add your <b>OpenRouter</b>, <b>Groq</b> and <b>OpenAI-compatible</b> keys. Get <b>one endpoint</b> + <b>one key</b> that fans out across all of them with automatic failover. OpenAI SDKs work unchanged.</p>
+    <div class="row"><button class="btn" id="btn-start">Open dashboard</button><a class="mut" href="https://orinai.org">orinai.org</a><a class="mut" href="https://github.com/januththedev/orin-router-service">GitHub</a></div>
+  </div>
+  <div class="card" id="connect-card"><h2>Connect</h2>
+    <p class="mut">Paste an <b>Orin session token</b> (from Orin Chat login) or an <b>Orin MCP credential</b> (<code>orin_mcp_…</code>). Stored only in this browser. Your provider keys are encrypted server-side and never shown again.</p>
+    <label>Orin token</label><input id="token" type="password" placeholder="orin session or orin_mcp_…" autocomplete="off" />
+    <div class="row"><button class="btn" id="btn-save">Save &amp; open dashboard</button><button class="btn ghost" id="btn-clear">Forget</button></div>
+  </div>
+  <div class="grid">
+    <div class="card"><h2>1 · Add APIs</h2><p class="mut">Paste keys from any provider. List the models each one serves — or leave blank for “any model”.</p></div>
+    <div class="card"><h2>2 · Get 1 API</h2><p class="mut">Mint one <code>orin_…</code> key. Point any OpenAI client at <code>/v1</code>. Done.</p></div>
+    <div class="card"><h2>3 · Survives outages</h2><p class="mut">429/5xx/timeout/dead key → next provider, same request. Health is observed, never guessed.</p></div>
+  </div>
+</section>
+
+<section id="view-dash" class="hidden">
+  <div class="row"><button class="btn ghost" id="btn-back">← home</button><span class="sp"></span><button class="btn danger" id="btn-forget">Forget token</button></div>
+
+  <div class="card"><h2>Your gateway key</h2>
+    <p class="mut">One endpoint, one key, all your providers behind it:</p>
+    <pre>base_url = "https://router.orinai.org/v1"
+api_key  = "orin_…"</pre>
+    <div class="row"><button class="btn" id="btn-mint">Mint new key</button><input id="key-name" placeholder="key name (e.g. Production)" style="max-width:260px" /></div>
+    <div id="keys"></div>
+  </div>
+
+  <div class="card"><h2>Add an API</h2>
+    <div class="grid">
+      <div><label>ID (a-z0-9_-)</label><input id="p-id" placeholder="or1" /></div>
+      <div><label>Type</label><select id="p-type"><option value="openrouter">OpenRouter</option><option value="groq">Groq</option><option value="custom">Custom (OpenAI-compatible)</option></select></div>
+    </div>
+    <div id="p-url-wrap" class="hidden"><label>Base URL (custom only)</label><input id="p-url" placeholder="https://api.example.com/v1" /></div>
+    <label>API key (stored encrypted, never shown again)</label><input id="p-key" type="password" placeholder="sk-or-… / gsk_…" autocomplete="off" />
+    <label>Models, comma separated (blank = serves any model)</label><input id="p-models" placeholder="x-ai/grok-4-1-fast, llama-3.3-70b-versatile" />
+    <div class="row"><button class="btn" id="btn-add">Save provider</button><span class="mut" id="p-msg"></span></div>
+    <div id="providers"></div>
+  </div>
+
+  <div class="card"><h2>Usage</h2><div class="grid" id="stats"></div></div>
+
+  <div class="card"><h2>Recent requests</h2><div style="overflow-x:auto"><table><thead><tr><th>time</th><th>requested</th><th>provider</th><th>status</th><th>ms</th><th>error</th></tr></thead><tbody id="logs"></tbody></table></div></div>
+</section>
+</main>
+<footer><span>© 2026 Orin AI · Januth Nimnal</span><span>·</span><a href="https://orinai.org">orinai.org</a><a href="https://chat.orinai.org">Chat</a><a href="https://tools.orinai.org">Tools</a><a href="https://console.orinai.org">Console</a></footer>
+<script>
+const $ = (id) => document.getElementById(id);
+const auth = () => ({ 'Content-Type': 'application/json', Authorization: 'Bearer ' + (localStorage.getItem('orin_token') || '') });
+const api = async (path, opts = {}) => {
+  const r = await fetch(path, { ...opts, headers: { ...auth(), ...(opts.headers || {}) } });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error((j.error && j.error.message) || j.error || 'request failed');
+  return j;
+};
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const show = (id) => { for (const v of ['view-home', 'view-dash']) $(v).classList.add('hidden'); $(id).classList.remove('hidden'); };
+
+$('btn-start').onclick = () => { $('connect-card').scrollIntoView({ behavior: 'smooth' }); };
+$('btn-save').onclick = () => { localStorage.setItem('orin_token', $('token').value.trim()); openDash(); };
+$('btn-clear').onclick = () => { localStorage.removeItem('orin_token'); $('token').value = ''; };
+$('btn-back').onclick = () => show('view-home');
+$('btn-forget').onclick = () => { localStorage.removeItem('orin_token'); show('view-home'); };
+$('p-type').onchange = () => $('p-url-wrap').classList.toggle('hidden', $('p-type').value !== 'custom');
+
+$('btn-mint').onclick = async () => {
+  const name = $('key-name').value.trim() || 'default';
+  const { key, prefix } = await api('/api/keys', { method: 'POST', body: JSON.stringify({ name }) }).catch((e) => alert(e.message));
+  if (!key) return;
+  await navigator.clipboard.writeText(key).catch(() => {});
+  alert(`Gateway key copied (shown ONCE, prefix ${prefix}):\n${key}`);
+  loadKeys();
+};
+
+$('btn-add').onclick = async () => {
+  try {
+    $('p-msg').textContent = 'saving…';
+    await api('/api/providers', { method: 'POST', body: JSON.stringify({
+      id: $('p-id').value.trim(), type: $('p-type').value,
+      baseUrl: $('p-url').value.trim(), apiKey: $('p-key').value,
+      models: $('p-models').value.split(',').map((s) => s.trim()).filter(Boolean),
+    }) });
+    $('p-msg').textContent = 'saved ✓'; $('p-key').value = '';
+    loadProviders();
+  } catch (e) { $('p-msg').textContent = e.message; }
+};
+
+async function loadKeys() {
+  const { keys } = await api('/api/keys');
+  $('keys').innerHTML = keys.length ? '' : '<p class="mut">No keys yet — mint one above.</p>';
+  for (const k of keys) {
+    const d = document.createElement('div'); d.className = 'item';
+    d.innerHTML = `<span class="mono">${esc(k.name)} · <code>${esc(k.prefix)}…</code> · ${k.enabled ? '<span class="ok">active</span>' : '<span class="bad">revoked</span>'}</span>`;
+    if (k.enabled) {
+      const b = document.createElement('button'); b.className = 'btn danger small'; b.textContent = 'Revoke';
+      b.onclick = async () => { if (!confirm('Revoke this key? Apps using it break immediately.')) return; await api('/api/keys?id=' + k.id, { method: 'DELETE' }); loadKeys(); };
+      d.appendChild(b);
+    }
+    $('keys').appendChild(d);
+  }
+}
+
+async function loadProviders() {
+  const { providers } = await api('/api/providers');
+  $('providers').innerHTML = providers.length ? '' : '<p class="mut">No providers yet — add your first API above.</p>';
+  for (const p of providers) {
+    const d = document.createElement('div'); d.className = 'item';
+    d.innerHTML = `<span class="mono">${esc(p.id)} · ${esc(p.type)} · ${p.enabled ? '<span class="ok">on</span>' : '<span class="bad">off</span>'}<br /><span class="mut">${esc((p.models || []).join(', ') || 'any model')}</span></span>`;
+    const wrap = document.createElement('span'); wrap.className = 'row';
+    const t = document.createElement('button'); t.className = 'btn ghost small'; t.textContent = 'Test';
+    t.onclick = async () => { t.textContent = '…'; try { const r = await api('/api/providers', { method: 'POST', body: JSON.stringify({ action: 'test', id: p.id }) }); t.textContent = r.ok ? '✓ ok' : '✗ fail'; } catch (e) { t.textContent = '✗ fail'; } setTimeout(loadProviders, 1200); };
+    const del = document.createElement('button'); del.className = 'btn danger small'; del.textContent = 'Delete';
+    del.onclick = async () => { if (!confirm(`Delete provider ${p.id}?`)) return; await api('/api/providers?id=' + p.id, { method: 'DELETE' }); loadProviders(); };
+    wrap.appendChild(t); wrap.appendChild(del); d.appendChild(wrap);
+    $('providers').appendChild(d);
+  }
+}
+
+async function loadStats() {
+  const s = await api('/api/stats');
+  $('stats').innerHTML = `<div><div class="stat">${s.total}</div><div class="mut">requests</div></div><div><div class="stat ok">${s.ok}</div><div class="mut">ok</div></div><div><div class="stat bad">${s.errors}</div><div class="mut">errors</div></div><div><div class="stat">${s.avgLatencyMs}ms</div><div class="mut">avg latency</div></div>`;
+}
+
+async function loadLogs() {
+  const { logs } = await api('/api/logs?limit=30');
+  $('logs').innerHTML = logs.map((l) => `<tr><td>${new Date(l.at).toLocaleString()}</td><td>${esc(l.requested)}</td><td>${esc(l.provider || '—')}</td><td class="${l.status === 'ok' ? 'ok' : 'bad'}">${esc(l.status)}</td><td>${l.latencyMs}</td><td>${esc((l.error || '').slice(0, 80))}</td></tr>`).join('') || '<tr><td colspan="6" class="mut">no traffic yet</td></tr>';
+}
+
+async function openDash() {
+  if (!localStorage.getItem('orin_token')) { show('view-home'); return; }
+  show('view-dash');
+  try { await Promise.all([loadKeys(), loadProviders(), loadStats(), loadLogs()]); }
+  catch (e) { alert(e.message); show('view-home'); }
+}
+if (localStorage.getItem('orin_token')) openDash();
+</script>
+</body>
+</html>

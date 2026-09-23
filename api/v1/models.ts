@@ -1,5 +1,5 @@
-/** GET /v1/models — route aliases as models (public, no auth). */
-import { listModels } from '../../src/service.js';
+/** GET /v1/models — the caller's own models (gateway key auth). */
+import { authenticate, listModels } from '../../src/service.js';
 import { ctx, sendError } from '../_ctx.js';
 
 export const config = { maxDuration: 10 };
@@ -11,7 +11,9 @@ export default async function handler(req: any, res: any): Promise<void> {
     return;
   }
   try {
-    res.status(200).json(await listModels(ctx().store));
+    const { store } = ctx();
+    const key = await authenticate(req.headers?.authorization ?? null, store);
+    res.status(200).json(await listModels(store, key.userUid));
   } catch (e) {
     sendError(res, e);
   }

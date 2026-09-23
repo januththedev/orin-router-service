@@ -1,24 +1,25 @@
-/** Shared Vercel plumbing: config, store singleton, admin gate, errors. */
-import { loadConfig } from '../src/config.js';
+/** Shared Vercel plumbing: config, store singleton, owner auth, errors. */
+import { loadConfig, type RouterConfig } from '../src/config.js';
+import { requireOwner } from '../src/auth.js';
 import { OrinError } from '../src/errors.js';
 import { neonStore, type RouterStore } from '../src/store.js';
 
 let store: RouterStore | null = null;
-let adminSecret = '';
+let cfg: RouterConfig | null = null;
 
-export function ctx(): { store: RouterStore; adminSecret: string } {
-  if (!store) {
-    const cfg = loadConfig();
+export function ctx(): { store: RouterStore; cfg: RouterConfig } {
+  if (!store || !cfg) {
+    cfg = loadConfig();
     store = neonStore(cfg.databaseUrl);
-    adminSecret = cfg.adminSecret;
   }
-  return { store, adminSecret };
+  return { store, cfg };
 }
 
-export function requireAdmin(req: any): void {
-  const { adminSecret } = ctx();
-  const got = (req.headers?.['x-admin-secret'] as string) || '';
-  if (!got || got !== adminSecret) throw new OrinError('authorization', 'Admin secret required (X-Admin-Secret).');
+/** Owner uid from Orin session or MCP credential. Throws OrinError (401). */
+export async function owner(req: any): Promise<{ uid: string; store: RouterStore }> {
+  const c = ctx();
+  const uid = await requireOwner(req, c.cfg);
+  return { uid, store: c.store };
 }
 
 export function sendError(res: any, e: unknown): void {

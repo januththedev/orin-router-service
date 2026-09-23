@@ -1,36 +1,54 @@
-/** Shared fakes: in-memory store, mock adapters, mock fetch. */
+/** Shared fakes: in-memory user-scoped store, mock adapters, mock fetch. */
 import { RouterHealth } from '../src/router.ts';
 
+export const UID = 'u1';
+
 export function fakeStore(seed = {}) {
-  const providers = new Map(Object.entries(seed.providers ?? {}));
-  const routes = new Map(Object.entries(seed.routes ?? {}));
+  const providers = new Map(); // `${userUid}:${id}`
   const keys = new Map();
   const logs = [];
+  if (seed.providers) {
+    for (const [id, p] of Object.entries(seed.providers)) providers.set(`${p.userUid ?? UID}:${id}`, { userUid: UID, id, ...p });
+  }
+  const pkey = (u, id) => `${u}:${id}`;
   return {
-    providers, routes, keys, logs,
-    async getProviders() { return [...providers.values()]; },
-    async saveProvider(p) { providers.set(p.id, p); },
-    async deleteProvider(id) { providers.delete(id); },
-    async getRoutes() { return [...routes.values()]; },
-    async saveRoute(r) { routes.set(r.id, r); },
-    async deleteRoute(id) { routes.delete(id); },
+    providers, keys, logs,
+    async getProviders(userUid) { return [...providers.values()].filter((p) => p.userUid === userUid); },
+    async saveProvider(p) { providers.set(pkey(p.userUid, p.id), p); },
+    async deleteProvider(userUid, id) { providers.delete(pkey(userUid, id)); },
     async createKey(rec) {
       if ([...keys.values()].some((k) => k.hash === rec.hash)) throw new Error('duplicate');
       keys.set(rec.id, rec);
     },
-    async listKeys() { return [...keys.values()].map(({ hash, ...r }) => r); },
+    async listKeys(userUid) {
+      return [...keys.values()].filter((k) => k.userUid === userUid).map(({ hash, userUid: _u, ...r }) => r);
+    },
     async findKeyByHash(hash) { return [...keys.values()].find((k) => k.hash === hash) ?? null; },
-    async revokeKey(id) { const k = keys.get(id); if (k) k.enabled = false; },
+    async revokeKey(userUid, id) { const k = keys.get(id); if (k && k.userUid === userUid) k.enabled = false; },
     async log(e) { logs.push(e); },
-    async queryLogs() { return logs; },
-    async stats() { return { total: logs.length, ok: 0, errors: 0, avgLatencyMs: 0, byProvider: {} }; },
+    async queryLogs(userUid, opts = {}) {
+      return logs.filter((l) => l.userUid === userUid
+        && (!opts.status || l.status === opts.status)
+        && (!opts.provider || l.provider === opts.provider)).slice(0, opts.limit ?? 50);
+    },
+    async stats(userUid) {
+      const mine = logs.filter((l) => l.userUid === userUid);
+      return { total: mine.length, ok: 0, errors: 0, avgLatencyMs: 0, byProvider: {} };
+    },
   };
 }
 
 export function keyRec(over = {}) {
   return {
-    id: 'key_1', prefix: 'orin_abc', hash: 'h', name: 't',
+    id: 'key_1', userUid: UID, prefix: 'orin_abc', hash: 'h', name: 't',
     perMin: 0, enabled: true, createdAt: 1, ...over,
+  };
+}
+
+export function provRec(id, over = {}) {
+  return {
+    userUid: UID, id, type: 'custom', baseUrl: 'https://x.test/v1',
+    apiKey: 'k', models: [], enabled: true, ...over,
   };
 }
 

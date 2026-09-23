@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { bearerToken, hashSecret, mintKey, verifySecret } from '../src/keys.ts';
 import { validateBaseUrl, validateChatBody } from '../src/validate.ts';
 import { chatCompletions } from '../src/service.ts';
-import { fakeStore, keyRec, okAdapter } from './_fake.mjs';
+import { fakeStore, keyRec, okAdapter, provRec } from './_fake.mjs';
 
 test('minted keys look right and verify round-trip', () => {
   const m = mintKey();
@@ -57,8 +57,7 @@ test('concurrent chats do not corrupt each other or double-log', async () => {
   const store = fakeStore();
   const { hashSecret: hs } = await import('../src/keys.ts');
   await store.createKey({ ...keyRec(), hash: hs('s') });
-  await store.saveProvider({ id: 'a', type: 'custom', baseUrl: 'https://x/v1', apiKey: 'k', models: [], enabled: true });
-  await store.saveRoute({ id: 'smart', enabled: true, hops: [{ provider: 'a', model: 'm' }] });
+  await store.saveProvider(provRec('a', { baseUrl: 'https://x/v1' }));
   const adapters = new Map([['a', okAdapter('a', 'R')]]);
   const bodies = Array.from({ length: 10 }, (_, i) => ({ model: 'smart', messages: [{ role: 'user', content: `q${i}` }] }));
   const outs = await Promise.all(bodies.map((b) =>
@@ -75,7 +74,7 @@ test('duplicate key hashes are rejected (idempotent creation)', async () => {
   const rec = { ...keyRec(), hash: 'same' };
   await store.createKey(rec);
   await assert.rejects(store.createKey({ ...keyRec({ id: 'k2' }), hash: 'same' }), /duplicate/);
-  const list = await store.listKeys();
+  const list = await store.listKeys('u1');
   assert.equal(list.length, 1);
   assert.equal(list[0].hash, undefined);
 });

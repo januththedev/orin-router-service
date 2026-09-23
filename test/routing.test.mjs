@@ -120,6 +120,6 @@ test('latency EMA is recorded on success', async () => {
 
 test('fake store + key record shape sanity', async () => {
   const s = fakeStore();
-  assert.deepEqual(await s.getProviders(), []);
+  assert.deepEqual(await s.getProviders('u1'), []);
   assert.equal(keyRec().enabled, true);
 });
