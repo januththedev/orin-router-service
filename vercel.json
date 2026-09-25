@@ -11,6 +11,5 @@
     { "source": "/v1/chat/completions", "destination": "/api/v1/chat/completions" },
     { "source": "/v1/images/generations", "destination": "/api/v1/images/generations" },
     { "source": "/v1/models", "destination": "/api/v1/models" }
-  ],
-  "crons": [{ "path": "/api/internal/catalog/refresh", "schedule": "0 */2 * * *" }]
+  ]
 }

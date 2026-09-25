@@ -55,7 +55,7 @@ Vercel exposes exactly five functions:
 4. `api/internal/catalog/refresh.ts`
 5. `api/internal/attempts/[requestId].ts`
 
-Run migrations in order from `migrations/`. Production requires the secret-service values listed in `.env.example`; missing values fail startup. There is no in-memory rate, health, or usage fallback in live mode.
+Run migrations in order from `migrations/`. Production requires the secret-service values listed in `.env.example`; missing values fail startup. Catalog refresh is exposed as an authenticated internal route and must be called by an external scheduler at least every six hours; Vercel cron is intentionally not used because its frequency/plan limits are not part of the runtime contract. There is no in-memory rate, health, or usage fallback in live mode.
 
 ## Platform contract
 
