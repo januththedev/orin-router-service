@@ -5,7 +5,7 @@ import { ServiceAuthenticator } from "../src/service-auth.js";
 import { RouterError } from "../src/errors.js";
 
 const config = { providerMode: "fake", serviceSigningKey: "x", coreIntrospectionUrl: "http://127.0.0.1", coreClientId: "x", coreClientSecret: "x" };
-const introspector = { introspect: async () => ({ active: true, account_id: "acct_test", scopes: ["router:invoke"], usage_reservation_id: "usage_test" }) };
+const introspector = { verifyServiceCredential: async () => ({ active: true, account_id: "acct_test", scopes: ["router:invoke"], usage_reservation_id: "usage_test" }) };
 test("fake preview accepts only explicit preview service header", async () => {
   const auth = new ServiceAuthenticator(config, introspector);
   const principal = await auth.verify({ headers: { authorization: "Bearer fake", "x-orin-preview-service": "1" } });
