@@ -103,6 +103,23 @@ export class ProviderKeyManager {
 
   async list(accountId: string) { return (await this.store.list(accountId)).map(metadata); }
 
+  /**
+   * Server-side only: decrypt an active key so the Router can call that provider
+   * on the account's behalf. This never marks the key as revealed, and it is not
+   * reachable from the dashboard API, so it cannot be used to hand a plaintext
+   * secret back to a client.
+   */
+  async useForUpstream(accountId: string, provider: string): Promise<{ id: string; secret: string } | null> {
+    if (!/^[\w-]{3,80}$/.test(accountId) || !ALLOWED_PROVIDERS.has(provider)) return null;
+    const rows = await this.store.list(accountId);
+    for (const row of rows) {
+      if (row.accountId !== accountId || row.provider !== provider || row.status !== "active") continue;
+      if (row.expiresAt && Date.parse(row.expiresAt) <= Date.now()) continue;
+      return { id: row.id, secret: decrypt(row.encrypted, decodeKek(this.kek)) };
+    }
+    return null;
+  }
+
   async revealOnce(accountId: string, id: string): Promise<string | null> {
     const row = await this.store.get(id);
     if (!row || row.accountId !== accountId || row.status !== "active" || row.lastRevealedAt) return null;
