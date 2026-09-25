@@ -7,6 +7,7 @@
     "api/internal/catalog/refresh.ts": { "maxDuration": 30 },
     "api/internal/attempts/[requestId].ts": { "maxDuration": 10 },
     "api/dashboard/keys.ts": { "maxDuration": 15 },
+    "api/dashboard/gateway-keys.ts": { "maxDuration": 15 },
     "api/dashboard/overview.ts": { "maxDuration": 60 }
   },
   "rewrites": [
