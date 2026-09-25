@@ -5,7 +5,9 @@
     "api/v1/images/generations.ts": { "maxDuration": 60 },
     "api/v1/models.ts": { "maxDuration": 10 },
     "api/internal/catalog/refresh.ts": { "maxDuration": 30 },
-    "api/internal/attempts/[requestId].ts": { "maxDuration": 10 }
+    "api/internal/attempts/[requestId].ts": { "maxDuration": 10 },
+    "api/dashboard/keys.ts": { "maxDuration": 15 },
+    "api/dashboard/overview.ts": { "maxDuration": 60 }
   },
   "rewrites": [
     { "source": "/v1/chat/completions", "destination": "/api/v1/chat/completions" },

@@ -19,7 +19,12 @@ orin-thinking
 orin-coding
 ```
 
-Raw provider model IDs, wildcards, BYOK routes, user gateway-key management, and public dashboards are deferred to a separately approved Router product release.
+Raw provider model IDs and wildcards remain unavailable on the public inference
+surface. The authenticated management API is available at
+`POST /api/dashboard/keys` for Core service assertions carrying
+`scope=router:manage`; it supports list, create/one-time-reveal, rotate, and
+revoke actions. Provider secrets are envelope-encrypted with
+`ORIN_PROVIDER_KEK_CURRENT` and are never returned by list operations.
 
 ## Architecture
 
@@ -47,13 +52,15 @@ Tests are hermetic and use no live provider, database, Redis, or Vercel producti
 
 ## Deployment
 
-Vercel exposes exactly five functions:
+Vercel exposes the inference surface plus the authenticated dashboard:
 
 1. `api/v1/chat/completions.ts`
 2. `api/v1/images/generations.ts`
 3. `api/v1/models.ts`
 4. `api/internal/catalog/refresh.ts`
 5. `api/internal/attempts/[requestId].ts`
+6. `api/dashboard/keys.ts`
+7. `api/dashboard/overview.ts`
 
 Run migrations in order from `migrations/`. Production requires the secret-service values listed in `.env.example`; missing values fail startup. Catalog refresh is exposed as an authenticated internal route and must be called by an external scheduler at least every six hours; Vercel cron is intentionally not used because its frequency/plan limits are not part of the runtime contract. There is no in-memory rate, health, or usage fallback in live mode.
 
