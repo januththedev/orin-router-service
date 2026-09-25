@@ -1,21 +1,35 @@
 {
   "name": "orin-router-service",
-  "version": "1.0.0",
-  "description": "Orin Router: one OpenAI-compatible API over many providers. Priority routing, failover, keys, logs.",
+  "version": "1.1.0",
+  "description": "Orin Router: canonical Vercel inference gateway over the four Orin free model aliases.",
   "type": "module",
   "engines": {
-    "node": ">=18"
+    "node": ">=22.18.0"
   },
   "scripts": {
+    "platform:build": "npm --prefix vendor/orin-platform ci && npm --prefix vendor/orin-platform run build",
     "typecheck": "tsc --noEmit",
-    "test": "node --test --import ./test/_hooks.mjs test/*.test.mjs",
-    "test:ts": "tsc --noEmit && node --test test/*.test.mjs"
+    "test": "npm run platform:build && node --test --import ./test/_hooks.mjs test/*.test.mjs",
+    "test:contract": "npm run platform:build && node --test --import ./test/_hooks.mjs test/contract.test.mjs",
+    "test:security": "npm run platform:build && node --test --import ./test/_hooks.mjs test/auth.test.mjs test/validation.test.mjs test/url-guard.test.mjs",
+    "test:sql": "node --test --import ./test/_hooks.mjs test/sql-static.test.mjs",
+    "test:preview": "cross-env ORIN_PROVIDER_MODE=fake node --test --import ./test/_hooks.mjs test/preview.test.mjs",
+    "test:ts": "tsc --noEmit && node --test test/*.test.mjs",
+    "check": "npm run typecheck && npm test && npm run test:contract && npm run test:security && npm run test:sql && npm run test:preview"
   },
   "dependencies": {
-    "@neondatabase/serverless": "^1.0.0"
+    "@neondatabase/serverless": "1.0.1",
+    "@upstash/redis": "1.35.6",
+    "jose": "6.2.12",
+    "@orin/contracts": "file:vendor/orin-platform/packages/contracts",
+    "@orin/client": "file:vendor/orin-platform/packages/client",
+    "@orin/config": "file:vendor/orin-platform/packages/config",
+    "@orin/security": "file:vendor/orin-platform/packages/security",
+    "@orin/observability": "file:vendor/orin-platform/packages/observability"
   },
   "devDependencies": {
-    "@types/node": "^26.6.2",
-    "typescript": "^5.5.0"
+    "@types/node": "26.6.2",
+    "cross-env": "7.0.3",
+    "typescript": "5.9.3"
   }
 }
