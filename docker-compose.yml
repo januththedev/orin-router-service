@@ -1,0 +1,58 @@
+# Orin Router — single-container standalone deployment.
+#
+# Caddy terminates TLS in front of the Router so certificates renew themselves.
+# The Router itself only ever listens on loopback inside the compose network.
+services:
+  router:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: orin/router:${ORIN_ROUTER_TAG:-local}
+    restart: unless-stopped
+    env_file:
+      - ./deploy/oracle/router.env
+    environment:
+      PORT: "8080"
+      HOST: "0.0.0.0"
+    expose:
+      - "8080"
+    networks:
+      - edge
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - router
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./deploy/oracle/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - edge
+    security_opt:
+      - no-new-privileges:true
+
+networks:
+  edge:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:

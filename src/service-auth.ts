@@ -6,7 +6,25 @@ import type { GatewayKeyManager } from "./gateway-keys.js";
 
 export interface CoreCredentialVerifier { verifyServiceCredential(token: string, signal?: AbortSignal): Promise<{ active: boolean; account_id: string; scopes: string[]; usage_reservation_id?: string }>; }
 const CORE_INTROSPECTION_URL = "https://orinai.org/api/auth/introspect";
-function assertTrustedCoreEndpoint(rawUrl: string, providerMode: "fake" | "live"): URL { const url = new URL(rawUrl); if (url.username || url.password || url.port) throw new Error("Core introspection URL is not trusted"); if (providerMode === "live" && (url.protocol !== "https:" || !["orinai.org", "core.orinai.org", "api.orinai.org"].includes(url.hostname) || url.pathname !== "/api/auth/introspect")) throw new Error("Core introspection URL is not trusted"); return url; }
+const LOOPBACK_HOSTS = new Set(["127.0.0.1", "::1", "[::1]", "localhost"]);
+
+/**
+ * The introspection URL is a fetch destination, so it is pinned by mode rather
+ * than trusted from configuration. Live is pinned to the Orin apex; the fake
+ * profile is the local development loopback and nothing else, which is the only
+ * place a non-apex origin is ever accepted.
+ */
+function assertTrustedCoreEndpoint(rawUrl: string, providerMode: "fake" | "live"): URL {
+  const url = new URL(rawUrl);
+  if (url.username || url.password) throw new Error("Core introspection URL is not trusted");
+  if (providerMode === "live") {
+    if (url.protocol !== "https:" || url.port || !["orinai.org", "core.orinai.org", "api.orinai.org"].includes(url.hostname) || url.pathname !== "/api/auth/introspect") throw new Error("Core introspection URL is not trusted");
+    return url;
+  }
+  if (url.protocol !== "http:" && url.protocol !== "https:") throw new Error("Core introspection URL is not trusted");
+  if (!LOOPBACK_HOSTS.has(url.hostname)) throw new Error("The fake profile only introspects against loopback.");
+  return url;
+}
 export class ServiceAuthenticator {
   readonly #config: RouterConfig;
   readonly #verifier: CoreCredentialVerifier;

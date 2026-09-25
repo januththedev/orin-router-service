@@ -1,0 +1,14 @@
+.git
+.github
+.mimosa
+node_modules
+**/node_modules
+**/dist
+test
+ui
+docs
+*.png
+*.log
+.env
+.env.*
+deploy/oracle/router.env

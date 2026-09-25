@@ -12,5 +12,5 @@
     "lib": ["ES2022", "DOM", "DOM.AsyncIterable"],
     "types": ["node"]
   },
-  "include": ["src", "api", "test"]
+  "include": ["src", "api", "server", "test"]
 }

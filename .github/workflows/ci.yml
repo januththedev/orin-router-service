@@ -23,3 +23,22 @@ jobs:
       - run: npm run platform:build
       - run: npm run check
       - run: git diff --exit-code
+
+  standalone:
+    name: standalone deployment
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          submodules: recursive
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22.18.0
+          cache: npm
+      - run: npm ci
+      - run: npm --prefix vendor/orin-platform ci
+      - run: npm --prefix vendor/orin-platform run build
+      - name: Build and boot the standalone server
+        run: bash deploy/oracle/smoke.sh
+      - name: Build the container image
+        run: docker build -t orin/router:ci .
