@@ -1,0 +1,14 @@
+CREATE INDEX IF NOT EXISTS provider_attempts_request_idx ON orin_router.provider_attempts(request_id, attempt_no);
+CREATE INDEX IF NOT EXISTS catalog_models_snapshot_idx ON orin_router.catalog_models(snapshot_id);
+ALTER TABLE orin_router.provider_pools ENABLE ROW LEVEL SECURITY;
+ALTER TABLE orin_router.provider_catalog_snapshots ENABLE ROW LEVEL SECURITY;
+ALTER TABLE orin_router.catalog_models ENABLE ROW LEVEL SECURITY;
+ALTER TABLE orin_router.router_aliases ENABLE ROW LEVEL SECURITY;
+ALTER TABLE orin_router.router_chain_candidates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE orin_router.provider_attempts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE orin_router.provider_key_incidents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE orin_platform.outbox ENABLE ROW LEVEL SECURITY;
+CREATE POLICY router_runtime_read ON orin_router.router_aliases FOR SELECT USING (true);
+CREATE POLICY router_runtime_catalog ON orin_router.provider_catalog_snapshots FOR SELECT USING (true);
+CREATE POLICY router_runtime_models ON orin_router.catalog_models FOR SELECT USING (true);
+CREATE POLICY router_runtime_attempts ON orin_router.provider_attempts FOR ALL USING (account_id = current_setting('app.account_id', true)) WITH CHECK (account_id = current_setting('app.account_id', true));
