@@ -8,7 +8,7 @@ Canonical cloud inference gateway for Orin Core and future Orin clients.
 - `POST /v1/chat/completions`
 - `POST /v1/images/generations`
 
-Every public request requires an Orin Core service assertion with `aud=orin-router`, `typ=service`, and `scope=router:invoke`. Billable requests also carry a Core usage reservation ID.
+Every public inference request accepts either an Orin Core service assertion (`aud=orin-router`, `typ=service`, `scope=router:invoke`) or a revocable `orin_...` gateway key created through the authenticated dashboard API. Core assertions also carry a usage reservation ID. Provider-key and management operations always require the stronger Core `router:manage` scope.
 
 The public model vocabulary is exactly:
 

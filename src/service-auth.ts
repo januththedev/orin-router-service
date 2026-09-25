@@ -2,6 +2,7 @@ import { jwtVerify } from "jose";
 import { RouterError } from "./errors.js";
 import type { ServicePrincipal } from "./types.js";
 import type { RouterConfig } from "./config.js";
+import type { GatewayKeyManager } from "./gateway-keys.js";
 
 export interface CoreCredentialVerifier { verifyServiceCredential(token: string, signal?: AbortSignal): Promise<{ active: boolean; account_id: string; scopes: string[]; usage_reservation_id?: string }>; }
 const CORE_INTROSPECTION_URL = "https://orinai.org/api/auth/introspect";
@@ -9,11 +10,18 @@ function assertTrustedCoreEndpoint(rawUrl: string, providerMode: "fake" | "live"
 export class ServiceAuthenticator {
   readonly #config: RouterConfig;
   readonly #verifier: CoreCredentialVerifier;
-  constructor(config: RouterConfig, verifier: CoreCredentialVerifier) { this.#config = config; this.#verifier = verifier; }
+  readonly #gatewayKeys: GatewayKeyManager | null;
+  constructor(config: RouterConfig, verifier: CoreCredentialVerifier, gatewayKeys: GatewayKeyManager | null = null) { this.#config = config; this.#verifier = verifier; this.#gatewayKeys = gatewayKeys; }
   async verify(req: any, signal?: AbortSignal, requiredScope = "router:invoke"): Promise<ServicePrincipal> {
     const rawAuthorization = req.headers?.authorization;
     const token = typeof rawAuthorization === "string" && rawAuthorization.length <= 4096 ? /^Bearer\s+([A-Za-z0-9._~-]+)$/i.exec(rawAuthorization.trim())?.[1] ?? null : null;
-    if (!token) throw new RouterError("ORIN_AUTHENTICATION_REQUIRED", "A Core service assertion is required.");
+    if (!token) throw new RouterError("ORIN_AUTHENTICATION_REQUIRED", "A Core service assertion or Orin gateway key is required.");
+    if (token.startsWith("orin_")) {
+      if (requiredScope !== "router:invoke" || !this.#gatewayKeys) throw new RouterError("ORIN_AUTHORIZATION_DENIED", "Gateway keys cannot access Router management.");
+      const key = await this.#gatewayKeys.verify(token);
+      if (!key) throw new RouterError("ORIN_AUTHENTICATION_REQUIRED", "The Orin gateway key is invalid or revoked.");
+      return { accountId: key.accountId, scopes: ["router:invoke"], subject: `gateway:${key.id}`, tokenId: `gateway:${key.id}`, expiresAt: key.expiresAt ? new Date(key.expiresAt) : new Date(Date.now() + 86_400_000), usageReservationId: `gateway:${key.id}` };
+    }
     if (this.#config.providerMode === "fake" && req.headers?.["x-orin-preview-service"] === "1") return { accountId: "preview-account", scopes: ["router:invoke", "router:manage"], subject: "preview-core", tokenId: "preview-token", expiresAt: new Date(Date.now() + 60_000), usageReservationId: "preview-usage" };
     let payload: Record<string, unknown>;
     try {
