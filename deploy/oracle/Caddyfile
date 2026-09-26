@@ -1,0 +1,48 @@
+# Caddy terminates TLS for the Router hostname and forwards to the container.
+#
+# Set ROUTER_HOST in deploy/oracle/router.env to the DNS name that points at the
+# Oracle VM, then restart:  docker compose restart caddy
+
+{
+	email {$ACME_EMAIL}
+	# Uncomment to use Let's Encrypt staging while DNS is still being cut over.
+	# acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+}
+
+{$ROUTER_HOST} {
+	encode zstd gzip
+
+	# The Router is stateless per request; nothing here is worth caching.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		-Server
+	}
+
+	# Streaming chat completions must not be buffered or timed out early.
+	@chat path /v1/chat/completions
+	handle @chat {
+		reverse_proxy router:8080 {
+			flush_interval -1
+			transport http {
+				read_timeout 300s
+				write_timeout 300s
+			}
+		}
+	}
+
+	handle {
+		reverse_proxy router:8080 {
+			transport http {
+				read_timeout 120s
+				write_timeout 120s
+			}
+		}
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}

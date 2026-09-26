@@ -3,11 +3,13 @@ export const MODEL_ALIASES: readonly ModelAlias[] = ["orin-cheap", "orin-balance
 export type ProviderMode = "fake" | "live";
 export interface ServicePrincipal { accountId: string; scopes: readonly string[]; subject: string; tokenId: string; expiresAt: Date; usageReservationId: string; }
 export interface ChatMessage { role: "system" | "user" | "assistant"; content: string; }
-export interface ChatRequestBody { model: ModelAlias; messages: ChatMessage[]; stream: boolean; temperature?: number; max_tokens?: number; }
-export interface ImageRequestBody { model: ModelAlias; prompt: string; n: 1; size?: "512x512" | "768x768" | "1024x1024"; response_format: "b64_json"; }
+/** Either an Orin alias or a concrete OpenRouter `:free` model id. */
+export type RoutableModel = ModelAlias | string;
+export interface ChatRequestBody { model: RoutableModel; messages: ChatMessage[]; stream: boolean; temperature?: number; max_tokens?: number; }
+export interface ImageRequestBody { model: RoutableModel; prompt: string; n: 1; size?: "512x512" | "768x768" | "1024x1024"; response_format: "b64_json"; }
 export interface CatalogModel { provider: string; modelId: string; fetchedAt: string; sourceStatus: "success" | "failure"; capabilities: string[]; contextLimit: number; prices: { prompt: number | null; completion: number | null; image: number | null }; }
 export interface CatalogSnapshot { provider: string; fetchedAt: string; status: "success" | "failure"; sourceVersion: string; sourceResponseHash: string; models: CatalogModel[]; errorCode?: string; }
-export interface ProviderAttemptFact { requestId: string; usageReservationId: string; accountId: string; alias: ModelAlias; provider: string; model: string; attemptNo: number; status: "started" | "succeeded" | "failed"; latencyMs: number; units: number; estimatedCostMicros: number | null; errorCode: string | null; }
+export interface ProviderAttemptFact { requestId: string; usageReservationId: string; accountId: string; alias: RoutableModel; provider: string; model: string; attemptNo: number; status: "started" | "succeeded" | "failed"; latencyMs: number; units: number; estimatedCostMicros: number | null; errorCode: string | null; }
 export interface ProviderAdapter { id: string; chat(request: ChatRequestBody, model: string, signal?: AbortSignal): Promise<{ text: string; model: string; units: number }>; stream(request: ChatRequestBody, model: string, onText: (text: string) => void, signal?: AbortSignal): Promise<{ text: string; model: string; units: number }>; image(request: ImageRequestBody, model: string, signal?: AbortSignal): Promise<{ data: string; model: string; units: number }>; }
 export interface DistributedState { isEligible(candidate: { provider: string; model: string }): Promise<boolean>; recordSuccess(candidate: { provider: string; model: string }, latencyMs: number): Promise<void>; recordFailure(candidate: { provider: string; model: string }, status: number): Promise<void>; consumeRequest(key: string, limit: number, windowMs: number): Promise<boolean>; }
 export interface RouterStore { beginAttempt(input: Omit<ProviderAttemptFact, "status" | "latencyMs" | "units" | "estimatedCostMicros" | "errorCode">): Promise<void>; finishAttempt(fact: ProviderAttemptFact): Promise<void>; listAttempts(requestId: string): Promise<ProviderAttemptFact[]>; }

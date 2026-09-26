@@ -1,7 +1,7 @@
 {
   "name": "orin-router-service",
-  "version": "1.1.0",
-  "description": "Orin Router: canonical Vercel inference gateway over the four Orin free model aliases.",
+  "version": "1.2.1",
+  "description": "Orin Router: canonical inference gateway over the four Orin free model aliases, free-models-only, with per-account BYOK upstream.",
   "type": "module",
   "engines": {
     "node": ">=22.18.0"
@@ -9,11 +9,13 @@
   "scripts": {
     "platform:build": "npm --prefix vendor/orin-platform ci && npm --prefix vendor/orin-platform run build",
     "typecheck": "tsc --noEmit",
+    "build:standalone": "tsc -p tsconfig.build.json",
+    "start": "node dist/server/index.js",
     "test": "npm run platform:build && node --test --import ./test/_hooks.mjs test/*.test.mjs",
     "test:contract": "npm run platform:build && node --test --import ./test/_hooks.mjs test/contract.test.mjs",
-    "test:security": "npm run platform:build && node --test --import ./test/_hooks.mjs test/auth.test.mjs test/validation.test.mjs test/url-guard.test.mjs",
+    "test:security": "npm run platform:build && node --test --import ./test/_hooks.mjs test/auth.test.mjs test/validation.test.mjs test/url-guard.test.mjs test/free-models-and-byok.test.mjs",
     "test:sql": "node --test --import ./test/_hooks.mjs test/sql-static.test.mjs",
-    "test:preview": "cross-env ORIN_PROVIDER_MODE=fake node --test --import ./test/_hooks.mjs test/preview.test.mjs",
+    "test:preview": "cross-env ORIN_PROVIDER_MODE=fake node --test --import ./test/_hooks.mjs test/preview.test.mjs test/standalone-server.test.mjs",
     "test:ts": "tsc --noEmit && node --test test/*.test.mjs",
     "check": "npm run typecheck && npm test && npm run test:contract && npm run test:security && npm run test:sql && npm run test:preview"
   },

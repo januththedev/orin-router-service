@@ -13,7 +13,7 @@ export default async function handler(req: any, res: any) {
     const principal = await ctx().auth.verify(req, undefined, "router:manage");
     const body = jsonBody(req) as Record<string, unknown>;
     const action = String(body.action || "models");
-    if (action === "models") return res.status(200).json(await listModels());
+    if (action === "models") return res.status(200).json(await listModels(ctx().service.catalog));
     if (action === "attempts") {
       const request = String(body.requestId || "");
       if (!/^[A-Za-z0-9._:-]{8,160}$/.test(request)) throw new RouterError("ORIN_VALIDATION_FAILED", "A valid requestId is required.");
