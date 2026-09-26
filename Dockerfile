@@ -5,8 +5,9 @@
 # Vercel ignores this and deploys the TypeScript directly.
 FROM node:22-alpine
 
-ENV NODE_ENV=production \
-    PORT=8080 \
+# NODE_ENV is deliberately not set here: npm omits devDependencies whenever it
+# is "production", and the build needs typescript. It is set after the build.
+ENV PORT=8080 \
     HOST=0.0.0.0
 
 # tini reaps zombies and forwards signals so the container stops cleanly.
@@ -28,7 +29,9 @@ COPY api ./api
 COPY server ./server
 
 # Build with dev dependencies, then drop them so the runtime image stays small.
-RUN npm run build && npm prune --omit=dev
+RUN npm run build:standalone && npm prune --omit=dev
+
+ENV NODE_ENV=production
 
 # Run unprivileged. The node image already ships a `node` user (uid 1000).
 RUN chown -R node:node /app

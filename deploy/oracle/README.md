@@ -314,7 +314,7 @@ sudo -u orin -H bash -lc '
   npm ci &&
   npm --prefix vendor/orin-platform ci &&
   npm --prefix vendor/orin-platform run build &&
-  npm run build &&
+  npm run build:standalone &&
   npm prune --omit=dev'
 ```
 

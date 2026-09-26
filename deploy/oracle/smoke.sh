@@ -4,7 +4,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 
-npm run build >/dev/null
+npm run build:standalone >/dev/null
 
 export DATABASE_URL=fake
 export ORIN_ROUTER_SERVICE_SIGNING_KEY=x

@@ -9,7 +9,7 @@
   "scripts": {
     "platform:build": "npm --prefix vendor/orin-platform ci && npm --prefix vendor/orin-platform run build",
     "typecheck": "tsc --noEmit",
-    "build": "tsc -p tsconfig.build.json",
+    "build:standalone": "tsc -p tsconfig.build.json",
     "start": "node dist/server/index.js",
     "test": "npm run platform:build && node --test --import ./test/_hooks.mjs test/*.test.mjs",
     "test:contract": "npm run platform:build && node --test --import ./test/_hooks.mjs test/contract.test.mjs",
