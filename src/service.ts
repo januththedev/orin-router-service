@@ -30,7 +30,6 @@ export async function listModels(catalog: CatalogStore | null = null) {
 
 export async function executeChat(ctx: RouterServiceContext, principal: ServicePrincipal, body: ChatRequestBody, requestId: string = randomUUID(), signal?: AbortSignal): Promise<Record<string, unknown>> {
   if (!(await ctx.state.consumeRequest(`${principal.accountId}:chat`, ctx.accountLimit, 60_000))) throw new RouterError("ORIN_RATE_LIMITED", "Router request limit exceeded.", true, requestId);
-  const { adapter } = await ctx.upstream.resolve(principal);
   const candidates = requireCandidates(ctx.catalog.getFresh(), body.model, "text").slice(0, 3);
   let last: RouterError | null = null;
   for (const candidate of candidates) {
@@ -38,9 +37,18 @@ export async function executeChat(ctx: RouterServiceContext, principal: ServiceP
     if (!(await ctx.state.isEligible(key))) continue;
     const attemptNo = candidates.indexOf(candidate) + 1;
     const started = Date.now();
+    // Bind the credential to the provider that serves this candidate. Resolving
+    // once up front and reusing that adapter would send, say, an OpenCode model
+    // id to the OpenRouter origin, and a BYOK key for one provider to another
+    // provider's host.
+    const resolved = await ctx.upstream.resolveForProvider(principal, candidate.provider);
+    if (!resolved) {
+      last = new RouterError("ORIN_PROVIDER_EXHAUSTED", `No ${candidate.provider} credential is available for this account.`, true, requestId);
+      continue;
+    }
     await ctx.store.beginAttempt({ ...attemptBase(principal, requestId, body.model, attemptNo), provider: candidate.provider, model: candidate.modelId });
     try {
-      const result = await adapter.chat(body, candidate.modelId, signal);
+      const result = await resolved.adapter.chat(body, candidate.modelId, signal);
       const fact: ProviderAttemptFact = { ...attemptBase(principal, requestId, body.model, attemptNo), provider: candidate.provider, model: candidate.modelId, status: "succeeded", latencyMs: Date.now() - started, units: result.units, estimatedCostMicros: 0, errorCode: null };
       await ctx.store.finishAttempt(fact);
       await ctx.state.recordSuccess(key, fact.latencyMs);
@@ -58,7 +66,6 @@ export async function executeChat(ctx: RouterServiceContext, principal: ServiceP
 
 export async function executeChatStream(ctx: RouterServiceContext, principal: ServicePrincipal, body: ChatRequestBody, writer: StreamWriter, requestId: string = randomUUID(), signal?: AbortSignal): Promise<void> {
   if (!(await ctx.state.consumeRequest(`${principal.accountId}:chat-stream`, ctx.accountLimit, 60_000))) throw new RouterError("ORIN_RATE_LIMITED", "Router request limit exceeded.", true, requestId);
-  const { adapter } = await ctx.upstream.resolve(principal);
   const candidates = requireCandidates(ctx.catalog.getFresh(), body.model, "text").slice(0, 3);
   let last: RouterError | null = null;
   for (const candidate of candidates) {
@@ -66,11 +73,16 @@ export async function executeChatStream(ctx: RouterServiceContext, principal: Se
     if (!(await ctx.state.isEligible(key))) continue;
     const attemptNo = candidates.indexOf(candidate) + 1;
     const started = Date.now();
+    const resolved = await ctx.upstream.resolveForProvider(principal, candidate.provider);
+    if (!resolved) {
+      last = new RouterError("ORIN_PROVIDER_EXHAUSTED", `No ${candidate.provider} credential is available for this account.`, true, requestId);
+      continue;
+    }
     await ctx.store.beginAttempt({ ...attemptBase(principal, requestId, body.model, attemptNo), provider: candidate.provider, model: candidate.modelId });
     const session = new StreamSession(writer, () => writer.event("event: start\ndata: {}\n\n"));
     try {
       let text = "";
-      const result = await adapter.stream(body, candidate.modelId, (chunk) => {
+      const result = await resolved.adapter.stream(body, candidate.modelId, (chunk) => {
         text += chunk;
         session.emit({ object: "chat.completion.chunk", model: body.model, choices: [{ index: 0, delta: { content: chunk }, finish_reason: null }] });
       }, signal);
@@ -92,7 +104,6 @@ export async function executeChatStream(ctx: RouterServiceContext, principal: Se
 
 export async function executeImage(ctx: RouterServiceContext, principal: ServicePrincipal, body: ImageRequestBody, requestId: string = randomUUID(), signal?: AbortSignal): Promise<Record<string, unknown>> {
   if (!(await ctx.state.consumeRequest(`${principal.accountId}:image`, ctx.accountLimit, 60_000))) throw new RouterError("ORIN_RATE_LIMITED", "Router request limit exceeded.", true, requestId);
-  const { adapter } = await ctx.upstream.resolve(principal);
   const candidates = requireCandidates(ctx.catalog.getFresh(), body.model, "image_generation").slice(0, 3);
   let last: RouterError | null = null;
   for (const candidate of candidates) {
@@ -100,9 +111,14 @@ export async function executeImage(ctx: RouterServiceContext, principal: Service
     if (!(await ctx.state.isEligible(key))) continue;
     const attemptNo = candidates.indexOf(candidate) + 1;
     const started = Date.now();
+    const resolved = await ctx.upstream.resolveForProvider(principal, candidate.provider);
+    if (!resolved) {
+      last = new RouterError("ORIN_PROVIDER_EXHAUSTED", `No ${candidate.provider} credential is available for this account.`, true, requestId);
+      continue;
+    }
     await ctx.store.beginAttempt({ ...attemptBase(principal, requestId, body.model, attemptNo), provider: candidate.provider, model: candidate.modelId });
     try {
-      const result = await adapter.image(body, candidate.modelId, signal);
+      const result = await resolved.adapter.image(body, candidate.modelId, signal);
       await ctx.store.finishAttempt({ ...attemptBase(principal, requestId, body.model, attemptNo), provider: candidate.provider, model: candidate.modelId, status: "succeeded", latencyMs: Date.now() - started, units: result.units, estimatedCostMicros: 0, errorCode: null });
       return { created: Math.floor(Date.now() / 1000), data: [{ b64_json: result.data }], model: body.model, request_id: requestId };
     } catch (error) {

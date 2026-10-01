@@ -1,5 +1,5 @@
 import { RouterError } from "./errors.js";
-import { createProviderAdapter, createProviderAdapterForOrigin, BYOK_PREFERENCE } from "./provider-registry.js";
+import { createProviderAdapter, createProviderAdapterForOrigin, isKnownProviderOrigin, PROVIDER_ORIGINS, BYOK_PREFERENCE } from "./provider-registry.js";
 import type { ProviderAdapter, ServicePrincipal } from "./types.js";
 import type { ProviderKeyManager } from "./provider-keys.js";
 
@@ -33,6 +33,46 @@ export class UpstreamResolver {
 
   constructor(deps: UpstreamResolverDeps) {
     this.deps = deps;
+  }
+
+  /**
+   * Resolves the credential for one specific provider.
+   *
+   * Returns null when the account has no usable credential for that provider, so
+   * the caller can fail over to the next candidate instead of aborting the whole
+   * request. That distinction matters because a candidate names the provider
+   * that serves it: a `:free` model only exists on OpenRouter and a `-free`
+   * model only on OpenCode, so sending one to the other's origin just 404s.
+   *
+   * The shared platform key is used only for origins that accept it, which today
+   * means OpenRouter alone. Every other origin is BYOK-only.
+   */
+  async resolveForProvider(principal: ServicePrincipal, provider: string): Promise<ResolvedUpstream | null> {
+    if (this.deps.mode === "fake") {
+      return { adapter: createProviderAdapter("fake", undefined), source: "fake", provider: "fake", providerKeyId: null };
+    }
+    if (!isKnownProviderOrigin(provider)) return null;
+    const origin = PROVIDER_ORIGINS[provider];
+    if (this.deps.providerKeys) {
+      const found = await this.deps.providerKeys.useForUpstream(principal.accountId, provider);
+      if (found) {
+        return {
+          adapter: createProviderAdapterForOrigin(provider, found.secret, this.deps.fetchImpl),
+          source: "account-byok",
+          provider,
+          providerKeyId: found.id,
+        };
+      }
+    }
+    if (origin.acceptsPlatformKey && this.deps.platformKey) {
+      return {
+        adapter: createProviderAdapterForOrigin(provider, this.deps.platformKey, this.deps.fetchImpl),
+        source: "platform",
+        provider,
+        providerKeyId: null,
+      };
+    }
+    return null;
   }
 
   async resolve(principal: ServicePrincipal): Promise<ResolvedUpstream> {

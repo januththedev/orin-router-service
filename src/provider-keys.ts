@@ -2,7 +2,11 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes, randomUUID, 
 import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
 import { RouterError } from "./errors.js";
 
-const ALLOWED_PROVIDERS = new Set(["openai", "anthropic", "openrouter", "groq", "deepseek", "google", "custom"]);
+// "opencode" is OpenCode Zen, and is the only entry here that is not a general
+// LLM vendor: its no-cost tier may not be brokered on Orin's behalf, so a key
+// for it is meaningful only as the account's own BYOK credential. See
+// `opencodeFreeTierTerms` in provider-registry.ts.
+const ALLOWED_PROVIDERS = new Set(["openai", "anthropic", "openrouter", "groq", "deepseek", "google", "custom", "opencode"]);
 const VERSION = 1;
 
 export interface ProviderKeyRecord {

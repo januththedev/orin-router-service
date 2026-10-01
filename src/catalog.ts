@@ -31,15 +31,20 @@ export function fakeCatalog(): CatalogSnapshot {
 }
 
 /**
- * Two independent gates: the model id must carry OpenRouter's `:free` marker,
- * and the catalog must price it at zero. A model that passes both is safe to
- * answer a user with.
+ * Two independent gates: the model id must carry the free marker of the provider
+ * that serves it, and the catalog must price it at zero. A model that passes
+ * both is safe to answer a user with.
+ *
+ * The marker is provider-scoped on purpose. OpenRouter writes `:free` and
+ * OpenCode writes `-free`, so a single global suffix would either reject every
+ * OpenCode model or, worse, accept an OpenCode id as an OpenRouter one and send
+ * it to the wrong origin.
  */
 export function isEligible(model: CatalogModel, capability: "text" | "image_generation", now = new Date()): boolean {
   const age = now.getTime() - Date.parse(model.fetchedAt);
   if (model.sourceStatus !== "success" || age < 0 || age > CATALOG_MAX_AGE_MS) return false;
   if (!model.capabilities.includes(capability)) return false;
-  if (!isFreeModelId(model.modelId)) return false;
+  if (!isFreeModelId(model.modelId, model.provider)) return false;
   return capability === "text"
     ? model.prices.prompt === 0 && model.prices.completion === 0
     : model.prices.image === 0;
@@ -57,34 +62,82 @@ export function candidatesFor(
   return pinned.sort((a, b) => a.modelId.localeCompare(b.modelId));
 }
 
-export async function refreshCatalog(url: string, fetchImpl: typeof fetch = fetch): Promise<CatalogSnapshot> {
-  const response = await fetchImpl(url, { headers: { accept: "application/json" } });
-  if (!response.ok) {
-    return { provider: "openrouter", fetchedAt: nowIso(), status: "failure", sourceVersion: "unknown", sourceResponseHash: "0".repeat(64), models: [], errorCode: "ORIN_CATALOG_UNAVAILABLE" };
-  }
+export interface CatalogSource {
+  provider: string;
+  url: string;
+}
+
+export const CATALOG_SOURCES: readonly CatalogSource[] = Object.freeze([
+  { provider: "openrouter", url: "https://openrouter.ai/api/v1/models" },
+  // OpenCode serves its model list without a credential. It is a second source
+  // of genuinely no-cost ids, not a way around the free-tier gate: see
+  // `opencodeFreeTierTerms` for why this origin stays BYOK-only.
+  { provider: "opencode", url: "https://opencode.ai/zen/v1/models" },
+]);
+
+async function fetchSource(source: CatalogSource, fetchImpl: typeof fetch): Promise<{ models: CatalogModel[]; raw: string } | null> {
+  const response = await fetchImpl(source.url, { headers: { accept: "application/json" } });
+  if (!response.ok) return null;
   const raw = await response.text();
   const parsed = JSON.parse(raw) as { data?: Array<Record<string, unknown>> };
+  const provider = source.provider;
+  // Zen publishes no prices, so its no-cost models are established by the `-free`
+  // marker plus the published pricing table. Recording 0 is what lets the shared
+  // `isEligible` zero-price gate treat both sources identically.
+  const priced = provider === "opencode";
   const mapped = (parsed.data ?? []).map((item) => ({
-    provider: "openrouter",
+    provider,
     modelId: String(item.id ?? ""),
     fetchedAt: nowIso(),
     sourceStatus: "success" as const,
     capabilities: ["text", "streaming"],
     contextLimit: Number(item.context_length ?? 0),
-    prices: {
-      prompt: Number((item.pricing as Record<string, unknown> | undefined)?.prompt ?? NaN),
-      completion: Number((item.pricing as Record<string, unknown> | undefined)?.completion ?? NaN),
-      image: null,
-    },
+    prices: priced
+      ? { prompt: 0, completion: 0, image: null }
+      : {
+          prompt: Number((item.pricing as Record<string, unknown> | undefined)?.prompt ?? NaN),
+          completion: Number((item.pricing as Record<string, unknown> | undefined)?.completion ?? NaN),
+          image: null,
+        },
   }));
-  // Keep only the no-cost tier at ingest, so nothing downstream can route to a paid model.
+  return { models: filterFreeModels(mapped), raw };
+}
+
+/**
+ * Builds one snapshot from every configured source.
+ *
+ * A source that fails is dropped rather than failing the whole refresh: one
+ * provider being unreachable should not empty the pool. A refresh where every
+ * source failed is a failure, so the router fails closed instead of pretending
+ * it has no models for a reason other than "none exist".
+ */
+export async function refreshCatalog(
+  urlOrSources: string | readonly CatalogSource[] = CATALOG_SOURCES,
+  fetchImpl: typeof fetch = fetch,
+): Promise<CatalogSnapshot> {
+  const sources: readonly CatalogSource[] = typeof urlOrSources === "string" ? [{ provider: "openrouter", url: urlOrSources }] : urlOrSources;
+  const models: CatalogModel[] = [];
+  const parts: string[] = [];
+  for (const source of sources) {
+    try {
+      const result = await fetchSource(source, fetchImpl);
+      if (!result) continue;
+      models.push(...result.models);
+      parts.push(`${source.provider}:${createHash("sha256").update(result.raw).digest("hex")}`);
+    } catch {
+      // A source that throws is treated exactly like one that returns non-2xx.
+    }
+  }
+  if (!parts.length) {
+    return { provider: "catalog", fetchedAt: nowIso(), status: "failure", sourceVersion: "unknown", sourceResponseHash: "0".repeat(64), models: [], errorCode: "ORIN_CATALOG_UNAVAILABLE" };
+  }
   return {
-    provider: "openrouter",
+    provider: "catalog",
     fetchedAt: nowIso(),
     status: "success",
-    sourceVersion: "openrouter",
-    sourceResponseHash: createHash("sha256").update(raw).digest("hex"),
-    models: filterFreeModels(mapped),
+    sourceVersion: sources.map((source) => source.provider).join("+"),
+    sourceResponseHash: createHash("sha256").update(parts.join("|")).digest("hex"),
+    models,
   };
 }
 
